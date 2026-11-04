@@ -1,0 +1,1545 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSE313 Midterm Stepper</title>
+<meta name="description" content="Step-by-step CSE313 Compiler Construction midterm guide: ambiguity, left recursion, left factoring, FIRST/FOLLOW, LL(1) table and parsing.">
+<style>
+:root{
+  --bg:#f6f4f2;--card:#ffffff;--ink:#1e1d1e;--muted:#6e6769;--line:#e2dddc;--soft:#f2f0ee;
+  --rose:#786560;--rose-t:#efe7e4;--teal:#3f6a72;--teal-t:#e3eef0;--sand:#8a6a33;--sand-t:#f4ecdc;
+  --clay:#a24a36;--clay-t:#f6e4de;--lav:#5b5679;--lav-t:#ecebf3;--hl:#f2d98a;--hl-ink:#1e1d1e;
+  --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --sans:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0c0b0c;--card:#141314;--ink:#e2dddc;--muted:#a9a3a4;--line:#2a2729;--soft:#1e1d1e;
+  --rose:#c7b1ac;--rose-t:#2e2726;--teal:#a5bfc4;--teal-t:#1c2426;--sand:#d6c2a4;--sand-t:#2a251e;
+  --clay:#d99a88;--clay-t:#33221e;--lav:#bbb8c8;--lav-t:#232129;--hl:#5d4e2b;--hl-ink:#fafcfb;}}
+:root[data-theme="dark"]{
+  --bg:#0c0b0c;--card:#141314;--ink:#e2dddc;--muted:#a9a3a4;--line:#2a2729;--soft:#1e1d1e;
+  --rose:#c7b1ac;--rose-t:#2e2726;--teal:#a5bfc4;--teal-t:#1c2426;--sand:#d6c2a4;--sand-t:#2a251e;
+  --clay:#d99a88;--clay-t:#33221e;--lav:#bbb8c8;--lav-t:#232129;--hl:#5d4e2b;--hl-ink:#fafcfb;}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--sans);-webkit-text-size-adjust:100%}
+.wrap{max-width:900px;margin:0 auto;padding:0 16px 80px}
+header.top{padding:28px 0 8px}
+header.top .kicker{font:12px var(--mono);color:var(--muted);letter-spacing:.06em;text-transform:lowercase}
+h1{font:700 1.9rem/1.2 var(--sans);margin:6px 0 8px}
+h2{font:700 1.4rem/1.25 var(--sans);margin:4px 0 12px}
+h3{font:600 1.08rem/1.3 var(--sans);margin:22px 0 8px}
+h4{font:600 1rem var(--sans);margin:16px 0 6px}
+h5{font:600 .92rem var(--mono);margin:14px 0 6px;color:var(--rose)}
+p{margin:8px 0}
+code,.mono{font-family:var(--mono);font-size:.92em}
+p code,li code,td code,.st-msg code{background:var(--soft);border:1px solid var(--line);padding:0 4px;border-radius:3px}
+.muted{color:var(--muted)}
+.bad{color:var(--clay)}
+a{color:var(--teal)}
+nav.pills{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);display:flex;gap:6px;overflow-x:auto;padding:10px 0;scrollbar-width:none;height:49px}
+nav.pills::-webkit-scrollbar{display:none}
+nav.pills a{flex:0 0 auto;font:12px var(--mono);text-decoration:none;color:var(--ink);border:1px solid var(--line);background:var(--card);padding:4px 9px;border-radius:999px;white-space:nowrap}
+nav.pills a:hover{border-color:var(--rose)}
+section.card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:20px 18px;margin:18px 0}
+.tag{display:inline-block;font:11px var(--mono);color:var(--rose);background:var(--rose-t);padding:2px 8px;border-radius:3px;margin-bottom:6px;text-transform:lowercase}
+.exact{border-left:4px solid var(--lav);background:var(--lav-t);padding:10px 14px;margin:12px 0;border-radius:0 4px 4px 0}
+.exact::before{content:"exam text";display:block;font:11px var(--mono);color:var(--lav);margin-bottom:2px}
+.key{border-left:4px solid var(--teal);background:var(--teal-t);padding:10px 14px;margin:12px 0;border-radius:0 4px 4px 0}
+.warnbox{border-left:4px solid var(--clay);background:var(--clay-t);padding:10px 14px;margin:12px 0;border-radius:0 4px 4px 0}
+.warnbox::before{content:"exam trap";display:block;font:11px var(--mono);color:var(--clay);margin-bottom:2px}
+.memo{border:1px dashed var(--sand);background:var(--sand-t);padding:10px 14px;margin:12px 0;border-radius:4px}
+.memo::before{content:"memory aid";display:block;font:11px var(--mono);color:var(--sand);margin-bottom:2px}
+.tscroll{overflow-x:auto;margin:10px 0}
+table{border-collapse:collapse;font-size:.92rem}
+th,td{border:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}
+thead th{background:var(--soft);font-weight:600}
+table.cmp{width:100%}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:12px 0}
+.mini-card{border:1px solid var(--line);border-radius:5px;padding:10px 12px;background:var(--card)}
+.mini-card b{display:block;font-family:var(--mono);font-size:.9rem;color:var(--rose)}
+.mini-card small{display:block;color:var(--muted);font-size:.82rem;margin-top:4px}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:10px 0}
+.flow span{font:12px var(--mono);border:1px solid var(--line);background:var(--soft);padding:4px 8px;border-radius:3px}
+.flow i{font-style:normal;color:var(--muted)}
+.formula{font:15px/1.7 var(--mono);background:var(--soft);border:1px solid var(--line);border-radius:4px;padding:10px 14px;margin:10px 0;overflow-x:auto;white-space:pre}
+details.ex{border:1px solid var(--line);border-radius:5px;margin:10px 0;background:var(--card)}
+details.ex>summary{cursor:pointer;padding:10px 14px;font-weight:600}
+details.ex[open]>summary{border-bottom:1px solid var(--line)}
+details.ex>*:not(summary){margin-left:14px;margin-right:14px}
+details.ex>.stepper{margin:12px 10px}
+/* stepper */
+.stepper{border:1px solid var(--rose);border-radius:6px;margin:14px 0;background:var(--card)}
+.st-sticky{position:sticky;top:49px;z-index:5;background:var(--card);border-radius:6px 6px 0 0;box-shadow:0 1px 0 var(--line)}
+.st-head{border-radius:6px 6px 0 0;display:flex;justify-content:space-between;gap:8px;padding:8px 12px;background:var(--rose-t);font:12px var(--mono)}
+.st-title{font-weight:600}
+.st-bar{height:3px;background:var(--line)}.st-bar i{display:block;height:100%;background:var(--rose);transition:width .2s}
+.st-msg{padding:12px 14px;min-height:72px;max-height:34vh;overflow-y:auto;font-size:1rem;border-bottom:1px solid var(--line)}
+.st-msg.msg-bad{background:var(--clay-t)}.st-msg.msg-good{background:var(--teal-t)}
+.phase{display:inline-block;font:11px var(--mono);background:var(--ink);color:var(--bg);padding:1px 7px;border-radius:3px;margin-right:8px}
+.st-ctl{display:flex;gap:6px;padding:8px 12px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+button{white-space:nowrap;font:13px var(--mono);border:1px solid var(--line);background:var(--card);color:var(--ink);padding:7px 12px;border-radius:4px;cursor:pointer;min-height:36px}
+button:hover:not(:disabled){border-color:var(--rose)}
+button:disabled{opacity:.4;cursor:default}
+button.primary{background:var(--rose);color:var(--bg);border-color:var(--rose);font-weight:600;flex:1;max-width:220px}
+.st-view{padding:12px;overflow-x:auto}
+/* grammar */
+.gram{font:15px/1.9 var(--mono);margin:4px 0 10px}
+.gline{padding:0 6px;border-radius:3px;white-space:nowrap}
+.gline.g-focus{background:var(--soft)}
+.gline.g-new{background:var(--teal-t)}
+.lhs{font-weight:700;color:var(--rose)}.arr,.bar{color:var(--muted)}
+.alt{padding:1px 3px;border-radius:3px}
+.alt-on{background:var(--hl);color:var(--hl-ink);outline:1px solid var(--sand)}
+.s.sym-on{text-decoration:underline 2px;font-weight:700}
+.s.sym-look{border-bottom:2px dotted currentColor}
+.rn{font-size:.7em;color:var(--muted);margin-right:2px}
+table.sets{font-family:var(--mono);font-size:.9rem}
+table.sets th{background:var(--soft);white-space:nowrap}
+tr.row-focus th,tr.row-focus td{background:var(--sand-t)}
+tr.row-done td{background:var(--teal-t)}
+.chip{display:inline-block;padding:0 3px;border-radius:3px}
+.chip-new{background:var(--hl);color:var(--hl-ink);font-weight:700}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.lbl{font:11px var(--mono);color:var(--muted);margin:10px 0 4px;text-transform:lowercase}
+table.ll1,table.ff{font-family:var(--mono);font-size:.82rem}
+table.ll1 td{min-width:58px;white-space:nowrap}
+table.ll1 .tr{display:block}
+td.cell-on{background:var(--hl);color:var(--hl-ink)}
+td.cell-bad{background:var(--clay-t);outline:2px solid var(--clay)}
+td.cell-look{outline:2px solid var(--teal);background:var(--teal-t)}
+.err{color:var(--muted);font-size:.85em}
+/* parse view */
+.buf,.stk,.hist{display:flex;flex-wrap:wrap;gap:3px;font-family:var(--mono)}
+.tok,.cell{border:1px solid var(--line);padding:3px 8px;border-radius:3px;min-width:28px;text-align:center;background:var(--card)}
+.tok-used{opacity:.35}
+.tok-la{background:var(--teal-t);border-color:var(--teal);font-weight:700;position:relative}
+.tok-la::after{content:"↑ LA";position:absolute;left:50%;transform:translateX(-50%);top:100%;font-size:10px;color:var(--teal)}
+.buf{margin-bottom:30px}
+.cell-top{background:var(--sand-t);border-color:var(--sand);font-weight:700}
+.hc{display:flex;flex-direction:column;align-items:center;border:1px solid var(--line);border-radius:3px;min-width:34px;padding:2px 4px;background:var(--card)}
+.hc .hs{font-weight:600}
+.hc-pop .hs{text-decoration:line-through;text-decoration-color:var(--clay)}
+.hc .hn{font-size:11px;color:var(--clay);min-height:14px}
+.hc .hr{font-size:9.5px;color:var(--muted);white-space:nowrap}
+.hc-new{background:var(--hl);color:var(--hl-ink)}
+details.mini{margin:10px 0;font-size:.9rem}
+details.mini summary{cursor:pointer;font:12px var(--mono);color:var(--muted)}
+/* tree */
+svg.tree{display:block;width:100%;height:auto;margin:8px auto}
+svg.tree .edge{stroke:var(--muted);stroke-width:1.2}
+svg.tree .edge-new{stroke:var(--sand);stroke-width:2.2}
+svg.tree .node{font:600 14px var(--mono);text-anchor:middle;dominant-baseline:middle;fill:var(--ink)}
+svg.tree .n-nt{fill:var(--rose)}
+svg.tree .n-eps{fill:var(--muted);font-style:italic}
+svg.tree .n-match{fill:var(--teal)}
+svg.tree .n-new{fill:var(--clay);font-size:16px}
+svg.tree .nval{font:11px var(--mono);fill:var(--sand)}
+/* derivation */
+.deriv{font:15px/1.8 var(--mono)}
+.dl{padding:0 6px;border-radius:3px}.dl-new{background:var(--hl);color:var(--hl-ink)}
+.nview .nb{margin:6px 0;padding:6px 8px;border-radius:3px}
+.nb-new{background:var(--hl);color:var(--hl-ink)}
+.phase-box{display:flex;flex-direction:column;gap:2px;border:1px solid var(--line);border-radius:4px;padding:8px 10px;background:var(--soft)}
+.phase-box b{font:12px var(--mono);color:var(--rose)}
+.final-box{font:14px/1.8 var(--mono);border:2px solid var(--teal);border-radius:4px;padding:8px 12px;display:inline-block;background:var(--teal-t);margin:6px 0}
+/* svg diagrams */
+svg.dia{width:100%;height:auto;max-width:640px;display:block;margin:10px auto}
+svg .bx{fill:var(--card);stroke:var(--line);stroke-width:1.2}
+svg .bx-a{fill:var(--rose-t);stroke:var(--rose)}
+svg .bx-b{fill:var(--teal-t);stroke:var(--teal)}
+svg .bx-c{fill:var(--sand-t);stroke:var(--sand)}
+svg .tx{font:11px var(--mono);fill:var(--ink);text-anchor:middle;dominant-baseline:middle}
+svg .tx-s{font:9.5px var(--mono);fill:var(--muted);text-anchor:middle;dominant-baseline:middle}
+svg .ln{stroke:var(--muted);stroke-width:1.2;fill:none}
+svg.nfa{width:100%;max-width:460px;display:block;margin:6px auto}
+svg.nfa .st{fill:var(--card);stroke:var(--ink);stroke-width:1.5}
+svg.nfa .st.st-on{fill:var(--hl);stroke:var(--sand);stroke-width:3}
+svg.nfa .st2{fill:none;stroke:var(--ink);stroke-width:1.2}
+svg.nfa .stl{font:600 14px var(--mono);fill:var(--ink);text-anchor:middle}
+svg.nfa .lab{font:12px var(--mono);fill:var(--muted);text-anchor:middle}
+svg.nfa .arrow{stroke:var(--muted);stroke-width:1.4;fill:none}
+svg .ahead{fill:var(--muted)}
+/* classifier */
+.cls{border:1px solid var(--line);border-radius:5px;padding:10px 12px;margin:8px 0}
+.cls .q{margin-bottom:6px}
+.cls button{margin-right:6px}
+.cls button.ok{background:var(--teal-t);border-color:var(--teal)}
+.cls button.no{background:var(--clay-t);border-color:var(--clay)}
+.fb{margin-top:6px;font-size:.92rem}
+.fb-ok{color:var(--teal)}.fb-no{color:var(--clay)}
+/* practice paper */
+.paper{border:2px solid var(--ink);border-radius:4px;padding:16px;background:var(--card)}
+.paper .phead{text-align:center;font-family:var(--mono);font-size:.9rem;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:10px}
+.pq{border-top:1px dashed var(--line);padding:12px 0}
+.pq .marks{float:right;font:12px var(--mono);color:var(--muted)}
+.pq-score{font:600 13px var(--mono);color:var(--teal)}
+.scheme{background:var(--soft);border-radius:4px;padding:8px 12px;margin:8px 0;font-size:.92rem}
+.scheme label{display:block;cursor:pointer;padding:2px 0}
+.timer{z-index:25;display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:5px;padding:8px 12px;margin:10px 0}
+#pp-time{font:700 1.4rem var(--mono)}#pp-time.low{color:var(--clay)}
+.total{font:700 1.1rem var(--mono)}
+.ans{font-size:.95rem}
+.ans .concl{border-top:1px solid var(--line);padding-top:8px}
+/* playground */
+textarea,input[type=text],select{font:14px var(--mono);width:100%;background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:8px}
+textarea{min-height:140px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.row>*{flex:1 1 200px}
+.loadrow{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.loadrow button{font-size:11px;padding:5px 8px;min-height:30px}
+#theme{position:fixed;right:14px;bottom:14px;z-index:30;border-radius:999px;padding:8px 14px;background:var(--ink);color:var(--bg);border:none}
+.check li{margin:4px 0}
+footer{color:var(--muted);font-size:.85rem;text-align:center;margin-top:30px}
+@media (max-width:560px){
+  h1{font-size:1.5rem}section.card{padding:16px 12px}
+  .two{grid-template-columns:1fr}
+  .gram{font-size:13.5px}.formula{font-size:13px}
+  .st-ctl button{padding:7px 9px}.b-end,.b-reset{flex:0 0 auto}
+}
+
+.timer.running{position:fixed;left:14px;bottom:14px;margin:0;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="kicker">cse313 · compiler construction · iub · autumn 2026 · section 1</div>
+  <h1>Midterm, step by step</h1>
+  <p>Syllabus topics 1–14, taught from zero. Every method has a <b>stepper</b>: press <b>Next</b> (or the → key) and it does <b>one small step</b>, like a debugger. Most text uses short, simple sentences. <span style="background:var(--lav-t);padding:0 4px">Purple boxes</span> hold exact exam wording to memorise.</p>
+  <p class="muted">Exam: Thursday 05/11/2026, 8:00–9:30 AM, BC 6007. Built from Ms. Nazma Sarker's slides, your class notes, Quiz 01/02 solutions, Assignment 01 and the Autumn-23 midterm.</p>
+</header>
+
+<nav class="pills" aria-label="Sections">
+  <a href="#s0">0 plan</a><a href="#s1">1 compiler</a><a href="#s2">2 phases</a><a href="#s3">3 lexical + RE</a><a href="#s4">4 grammar</a><a href="#s5">5 LMD/RMD</a><a href="#s6">6 ambiguity</a><a href="#s7">7 left recursion</a><a href="#s8">8 left factoring</a><a href="#s9">9 parser types</a><a href="#s10">10 top-down</a><a href="#s11">11 LL(1)</a><a href="#s12">12 FIRST/FOLLOW</a><a href="#s13">13 table</a><a href="#s14">14 parsing</a><a href="#s15">15 conflicts</a><a href="#s16">16 past papers</a><a href="#s17">17 practice paper</a><a href="#s18">18 true/false</a><a href="#s19">19 solver</a><a href="#s20">20 cheat sheet</a>
+</nav>
+
+<!-- 0 -->
+<section class="card" id="s0"><span class="tag">start here</span><h2>0 · What the exam looks like and how to use this page</h2>
+<p>The last midterm from this course (Autumn-23, SET-A) had this shape. Expect the same shape tomorrow.</p>
+<div class="tscroll"><table class="cmp"><thead><tr><th>Part</th><th>Question type</th><th>Marks</th><th>Lesson</th></tr></thead><tbody>
+<tr><td>Mid Q1</td><td>Prove the grammar is ambiguous or NOT. If ambiguous, convert to unambiguous.</td><td>7</td><td>5, 6</td></tr>
+<tr><td>Mid Q2</td><td>Write First() and Follow(). Draw the LL(1) parsing table. Parse a string showing all steps.</td><td>8</td><td>11–15</td></tr>
+<tr><td>Mid Q3</td><td>True / False (5 statements about parsers and grammars)</td><td>5</td><td>9, 10, 18</td></tr>
+<tr><td>Quiz Q1</td><td>Convert Non-Deterministic Grammar (NDG) to Deterministic Grammar (DG)</td><td>5</td><td>8</td></tr>
+<tr><td>Quiz Q2</td><td>Convert Left Recursive Grammar (LRG) to Right Recursive Grammar (RRG)</td><td>5</td><td>7</td></tr>
+</tbody></table></div>
+<div class="key"><b>Plan for tonight (about 4 hours).</b><br>1. Lessons 1–4 fast (30 min): words you must know.<br>2. Lessons 5–8 (75 min): derivations, ambiguity, left recursion, left factoring. These give 17 of the marks.<br>3. Lessons 11–15 (90 min): the LL(1) question. Do every stepper. Then do it on paper.<br>4. Section 17: sit the practice paper with the timer. Mark yourself.<br>5. Morning: section 20 cheat sheet only.</div>
+<p>Keys: <code>→</code> next step, <code>←</code> back (click a stepper first). The button at the bottom-right switches dark/light.</p>
+</section>
+
+<!-- 1 -->
+<section class="card" id="s1"><span class="tag">topic 1</span><h2>1 · Introduction to compiler</h2>
+<p>A computer understands only machine code (0s and 1s). People write programs in high-level languages (C, Java, Python). This is <b>source code</b>. A <b>language processor</b> translates source code so the computer can run it.</p>
+<div class="grid">
+  <div class="mini-card"><b>Compiler</b>Reads the <b>whole</b> program in one go and translates it into a target program.<small>C, C++ · output: target program, run later</small></div>
+  <div class="mini-card"><b>Interpreter</b>Runs the source program directly, statement by statement. No target program.<small>Python (scripting language)</small></div>
+  <div class="mini-card"><b>Assembler</b>Translates assembly language into machine code.<small>mnemonics: ADD, SUB, MUL, DIV, MOV</small></div>
+  <div class="mini-card"><b>Hybrid (Java)</b>Compile to <b>bytecode</b>, then a virtual machine interprets it.<small>JIT compilers turn bytecode into machine code just before it runs</small></div>
+</div>
+<div class="exact">A compiler is a program that reads the whole program written in a source language/high level language as a whole in one go and translates it into an equivalent program in a target language.</div>
+<div class="exact">Instead of producing a target program as a translation, an interpreter appears to directly execute the operations specified in the source program on inputs supplied by the user.</div>
+<div class="tscroll"><table class="cmp"><thead><tr><th></th><th>Compiler</th><th>Interpreter</th></tr></thead><tbody>
+<tr><td>Reads</td><td>whole program at once</td><td>one statement at a time</td></tr>
+<tr><td>Output</td><td>target program (machine/assembly code)</td><td>no target program, gives output directly</td></tr>
+<tr><td>Errors</td><td>reports after it scans the program</td><td>stops at the first error</td></tr>
+<tr><td>Speed of running</td><td>faster (already translated)</td><td>slower (translates while running)</td></tr>
+</tbody></table></div>
+<p>The jobs of a compiler: <b>translation</b>, <b>validation</b> (find errors), <b>optimization</b>.</p>
+</section>
+
+<!-- 2 -->
+<section class="card" id="s2"><span class="tag">topic 2</span><h2>2 · Different phases of compilation</h2>
+<p>A compiler works in 6 phases. Each phase takes the output of the one before it.</p>
+<svg class="dia" viewBox="0 0 400 330" role="img" aria-label="Six phases of a compiler">
+  <rect x="110" y="4" width="180" height="26" rx="3" class="bx"/><text x="200" y="17" class="tx">source program</text>
+  <g><rect x="110" y="44" width="180" height="30" rx="3" class="bx bx-a"/><text x="200" y="59" class="tx">1 Lexical analyzer</text>
+  <rect x="110" y="88" width="180" height="30" rx="3" class="bx bx-a"/><text x="200" y="103" class="tx">2 Syntax analyzer (parser)</text>
+  <rect x="110" y="132" width="180" height="30" rx="3" class="bx bx-a"/><text x="200" y="147" class="tx">3 Semantic analyzer</text>
+  <rect x="110" y="176" width="180" height="30" rx="3" class="bx bx-b"/><text x="200" y="191" class="tx">4 Intermediate code gen.</text>
+  <rect x="110" y="220" width="180" height="30" rx="3" class="bx bx-b"/><text x="200" y="235" class="tx">5 Code optimizer</text>
+  <rect x="110" y="264" width="180" height="30" rx="3" class="bx bx-b"/><text x="200" y="279" class="tx">6 Code generator</text></g>
+  <rect x="110" y="304" width="180" height="22" rx="3" class="bx"/><text x="200" y="315" class="tx">target program</text>
+  <path class="ln" d="M200 30v14M200 74v14M200 118v14M200 162v14M200 206v14M200 250v14M200 294v10"/>
+  <rect x="6" y="140" width="90" height="44" rx="3" class="bx bx-c"/><text x="51" y="156" class="tx">symbol</text><text x="51" y="170" class="tx">table</text>
+  <rect x="304" y="140" width="90" height="44" rx="3" class="bx bx-c"/><text x="349" y="156" class="tx">error</text><text x="349" y="170" class="tx">handler</text>
+  <path class="ln" d="M96 162h14M290 162h14" stroke-dasharray="3 3"/>
+  <text x="355" y="70" class="tx-s">ANALYSIS</text><text x="355" y="82" class="tx-s">(front end)</text>
+  <text x="355" y="230" class="tx-s">SYNTHESIS</text><text x="355" y="242" class="tx-s">(back end)</text>
+</svg>
+<div class="memo"><b>"Lazy Students Sleep In Our Class"</b>: Lexical, Syntax, Semantic, Intermediate, Optimization, Code generation.</div>
+<div class="stepper-host" data-notes="phases" data-title="One statement through all 6 phases"></div>
+<div class="grid">
+  <div class="mini-card"><b>Lexical</b>Makes tokens. Removes spaces and comments.</div>
+  <div class="mini-card"><b>Syntax</b>Checks structure with a grammar. Builds a parse tree.</div>
+  <div class="mini-card"><b>Semantic</b>Checks meaning: types, declared variables.</div>
+  <div class="mini-card"><b>Intermediate</b>Machine-independent code (three-address code).</div>
+  <div class="mini-card"><b>Optimization</b>Better code, same result.</div>
+  <div class="mini-card"><b>Code generation</b>Target code: assembly / machine code.</div>
+</div>
+</section>
+
+<!-- 3 -->
+<section class="card" id="s3"><span class="tag">topic 3</span><h2>3 · Lexical analysis and regular expressions</h2>
+<p>The lexical analyzer (also called <b>scanner</b> or <b>tokenizer</b>) reads the source code as a stream of characters, from left to right. It cuts the stream into <b>tokens</b> and sends them to the parser. It also removes white space and comments. It puts identifiers in the <b>symbol table</b>.</p>
+<div class="tscroll"><table class="cmp"><thead><tr><th>Term</th><th>Meaning</th><th>Example</th></tr></thead><tbody>
+<tr><td><b>Token</b></td><td>a class (category) of strings</td><td>identifier, number, keyword, operator, separator</td></tr>
+<tr><td><b>Lexeme</b></td><td>the actual characters in the code that match a token</td><td><code>result</code>, <code>a</code>, <code>10</code></td></tr>
+<tr><td><b>Pattern</b></td><td>the rule that describes the lexemes of a token (a regular expression)</td><td><code>[a-z][a-zA-Z0-9]*</code></td></tr>
+</tbody></table></div>
+<div class="exact">A lexical token is a sequence of characters that can be treated as a unit in the grammar of the programming languages. Token format: &lt;token-name, attribute-value&gt;</div>
+<p>Example from class: <code>int a, b; a = 10; return 0;</code> inside <code>int main() { ... }</code> gives 18 tokens: <code>int main ( ) { int a , b ; a = 10 ; return 0 ; }</code>. Comments are not tokens.</p>
+<details class="ex"><summary>Try: how many tokens in <code>printf("%d", result);</code>?</summary><p><b>7 tokens:</b> <code>printf</code> · <code>(</code> · <code>"%d"</code> · <code>,</code> · <code>result</code> · <code>)</code> · <code>;</code>. Rule: a whole string literal in quotes is <b>one</b> token. (The slides' example <code>printf("...");</code> has 5: printf ( "..." ) ;)</p></details>
+<h3>Regular expressions (RE)</h3>
+<p>An RE is a short formula that describes a set of strings (a <b>language</b>). The lexer uses REs as patterns.</p>
+<div class="tscroll"><table class="cmp"><thead><tr><th>Operator</th><th>Meaning</th><th>Example → strings</th></tr></thead><tbody>
+<tr><td><code>a|b</code></td><td>a <b>or</b> b (union)</td><td>a, b</td></tr>
+<tr><td><code>ab</code></td><td>a <b>then</b> b (concatenation)</td><td>ab</td></tr>
+<tr><td><code>a*</code></td><td>zero or more a (Kleene star)</td><td>ε, a, aa, aaa, …</td></tr>
+<tr><td><code>a+</code></td><td>one or more a</td><td>a, aa, …</td></tr>
+<tr><td><code>a?</code></td><td>zero or one a (optional)</td><td>ε, a</td></tr>
+<tr><td><code>[a-z]</code></td><td>any one letter a to z</td><td>a, q, z</td></tr>
+</tbody></table></div>
+<p>Class example: <code>num → digit+ ( . digit+ )?</code> means "one or more digits, then optionally a dot and more digits": 7, 42, 3.14.</p>
+<p>Class example: <code>(a|b)*ab</code> = any mix of a and b, but it must <b>end with ab</b>: ab, aab, bab, aaab. Its transition diagram (from your notes):</p>
+<div class="row"><input type="text" id="nfa-in" value="abab" aria-label="string to test"><button id="nfa-run" class="primary">Run the NFA</button></div>
+<div id="nfa-stepper"></div>
+<div class="warnbox">Regular expressions (finite automata) <b>cannot</b> check balanced brackets like <code>((()))</code>. They cannot count deep nesting. That is why the parser uses a <b>context-free grammar</b>, which is more powerful.</div>
+</section>
+
+<!-- 4 -->
+<section class="card" id="s4"><span class="tag">topic 4 · basics</span><h2>4 · Grammar (CFG): the words you must know</h2>
+<p>A <b>context-free grammar (CFG)</b> is a set of rules that says how to build valid sentences of a language. The parser uses it.</p>
+<div class="formula">E → E + T | T
+│   └───┬───┘
+│     right side (production body): terminals and non-terminals
+└ left side: one non-terminal</div>
+<div class="grid">
+  <div class="mini-card"><b>Terminal</b>A real token. It never changes. Lower-case, symbols, <code>id</code>.<small>a, b, +, (, id, int</small></div>
+  <div class="mini-card"><b>Non-terminal</b>A variable. It gets replaced by a rule. Upper-case.<small>E, T, S, A, expr</small></div>
+  <div class="mini-card"><b>Production</b>One rule: left side → right side.<small>T → T * F</small></div>
+  <div class="mini-card"><b>Start symbol</b>Where every derivation starts. The left side of the first rule.<small>S or E</small></div>
+  <div class="mini-card"><b>ε (epsilon)</b>The empty string. "Nothing".<small>E' → ε</small></div>
+  <div class="mini-card"><b>|</b>Means "or": several alternatives for one left side.<small>A → a | b</small></div>
+</div>
+<p>Assignment 01, Q1(a): for <code>S → (L) | a</code>, <code>L → L, S | S</code>:</p>
+<div class="key">Terminals = { (, ), a, , } · Non-terminals = { S, L } · Productions = S → (L), S → a, L → L,S, L → S (4 productions) · Start symbol = S</div>
+<div class="cls" data-a="T" data-why="It is upper-case and appears on a left side, so it is a non-terminal."><div class="q">In <code>E' → + T E' | ε</code>, is <code>T</code> a terminal or a non-terminal?</div><button data-v="t">Terminal</button><button data-v="T">Non-terminal</button><div class="fb"></div></div>
+<div class="cls" data-a="t" data-why="id is a token from the lexer. It never gets replaced, so it is a terminal."><div class="q">Is <code>id</code> a terminal or a non-terminal?</div><button data-v="t">Terminal</button><button data-v="T">Non-terminal</button><div class="fb"></div></div>
+<div class="cls" data-a="n" data-why="ε means empty. It is not a terminal and it never gets a column in the LL(1) table."><div class="q">Is <code>ε</code> a terminal?</div><button data-v="y">Yes</button><button data-v="n">No</button><div class="fb"></div></div>
+</section>
+
+<!-- 5 -->
+<section class="card" id="s5"><span class="tag">topic 5</span><h2>5 · Parse trees: leftmost (LMD) and rightmost (RMD) derivation</h2>
+<div class="exact">Derivation: A sequence of grammar rule applications and substitutions that transform a starting non-term into a sequence of terminals / tokens.</div>
+<p>At each step you replace <b>one</b> non-terminal by one of its right sides. Which one?</p>
+<div class="tscroll"><table class="cmp"><thead><tr><th>LMD (leftmost)</th><th>RMD (rightmost)</th></tr></thead><tbody>
+<tr><td>Always replace the <b>leftmost</b> non-terminal.</td><td>Always replace the <b>rightmost</b> non-terminal.</td></tr>
+<tr><td>Used by <b>top-down</b> parsers (LL).</td><td>Its reverse is used by <b>bottom-up</b> parsers (LR).</td></tr>
+</tbody></table></div>
+<div class="stepper-host" data-deriv="assign" data-title="Slides: derive id = id + real - integer ; (LMD)"></div>
+<p>A <b>parse tree</b> shows a derivation as a tree. The root is the start symbol. Inner nodes are non-terminals. Leaves are terminals. Read the leaves left to right and you get the string.</p>
+<div class="stepper-host" data-deriv="rmdParen" data-title="Notes: RMD of ( id * id ) + id"></div>
+<h3>Assignment 01, Q1(b): LMD and RMD of <code>(a, (a, a))</code></h3>
+<div class="stepper-host" data-deriv="asL" data-title="LMD of (a,(a,a))"></div>
+<div class="stepper-host" data-deriv="asR" data-title="RMD of (a,(a,a))"></div>
+<div class="warnbox">In an LMD, check every line: did you replace the <b>leftmost</b> non-terminal? A common mistake is to replace a non-terminal in the middle. Also: an unambiguous grammar gives the <b>same tree</b> for LMD and RMD. Only the order of steps changes.</div>
+</section>
+
+<!-- 6 -->
+<section class="card" id="s6"><span class="tag">topic 4 · mid Q1 (7 marks)</span><h2>6 · Ambiguous and unambiguous grammar, and conversion</h2>
+<div class="exact">A grammar is ambiguous if there exists a string that has more than one leftmost derivation (more than one parse tree, or more than one rightmost derivation).</div>
+<p>Why is that bad? Two trees = two meanings. From your notes: <code>id + id * id</code> with 3, 2, 5. Watch both trees.</p>
+<div class="stepper-host" data-deriv="ambL1" data-title="LMD 1 of id + id * id"></div>
+<div class="stepper-host" data-deriv="ambL2" data-title="LMD 2 of id + id * id"></div>
+<div class="exact">The Ambiguous Grammar does not consider the Precedence and Associativity.</div>
+<h3>Precedence and associativity</h3>
+<div class="grid">
+  <div class="mini-card"><b>Precedence</b>Which operator goes first. * / are higher than + −. ^ is highest.<small>3 + 2 * 5 = 13, not 25</small></div>
+  <div class="mini-card"><b>Left associative</b>Same operator twice: do the <b>left</b> one first. + − * /<small>3 + 2 + 1 → 5 + 1 → 6</small></div>
+  <div class="mini-card"><b>Right associative</b>Do the <b>right</b> one first. ^ (power)<small>3 ^ 5 ^ 2 = 3 ^ 25</small></div>
+</div>
+<div class="exact">Lower precedence operation rules should be declared in the upper level in the Grammar. Higher precedence operation rules should be declared in the lower level in the Grammar. Operators with same precedence must be resolved by Associativity.</div>
+<div class="memo"><b>Low on top, high at the bottom.</b> Left associative → left recursive (<code>E → E + T</code>). Right associative → right recursive (<code>F → G ^ F</code>).</div>
+<div class="stepper-host" data-notes="ambRecipe" data-title="Recipe: convert ambiguous → unambiguous (class notes example)"></div>
+<div class="stepper-host" data-deriv="fixed" data-title="After conversion: only one tree for 3 + 2 * 6"></div>
+<h3>The exam answer format (Quiz 01, faculty solution)</h3>
+<div class="stepper-host" data-deriv="q1a" data-title="Quiz 01 · LMD 1 of id ; id & id"></div>
+<div class="stepper-host" data-deriv="q1b" data-title="Quiz 01 · LMD 2 of id ; id & id"></div>
+<div class="stepper-host" data-notes="quiz1amb" data-title="Quiz 01 · write the answer like the faculty"></div>
+<h3>How to show a grammar is NOT ambiguous</h3>
+<p>Some questions ask "ambiguous or NOT". A layered grammar is <b>not</b> ambiguous when:</p>
+<ul><li>each operator appears in <b>one</b> rule only, at <b>one</b> level;</li><li>each rule recurses on <b>one side only</b> (<code>E → E @ S | S</code>, not <code>E → E @ E</code>);</li><li>so for any string there is only one way to build the tree.</li></ul>
+<p>Mid Autumn-23 Q1: <code>E → E@S | S</code>, <code>S → S#B | B</code>, <code>B → C~B | C</code>, <code>C → C?A | ε</code>, <code>A → a</code>. Every operator (@, #, ~, ?) has its own level and recurses on one side ∴ <b>NOT ambiguous</b>. Write it like this: "Each operator is at a different level of the grammar and each rule is either left or right recursive, never both. So every string has exactly one leftmost derivation. ∴ The grammar is unambiguous."</p>
+<p class="muted">Note: the printed paper shows <code>C → C?A / E</code>. With <code>E</code> there, no terminal string can be made at all, so it must be ε (we checked by computer). If you see something like this, state what you assume.</p>
+<div class="warnbox">The pattern <code>X → X op X</code> (same non-terminal on <b>both</b> sides of an operator) is the sign of ambiguity. Look for it first. Assignment Q2(iv) <code>B → B∆B | b</code> is ambiguous for this reason, even though E and T look fine.</div>
+<details class="ex"><summary>Assignment 01 Q2 and Q3: quick answers</summary>
+<p><b>(i)</b> <code>S → AS | b</code>, <code>A → SA | a</code>: ambiguous. <code>abab</code> has two LMDs:<br>S ⇒ AS ⇒ aS ⇒ aAS ⇒ aSAS ⇒ abAS ⇒ abaS ⇒ abab<br>S ⇒ AS ⇒ SAS ⇒ ASAS ⇒ aSAS ⇒ abAS ⇒ abaS ⇒ abab<br><span class="muted">This is not an operator grammar, so the precedence recipe does not apply. Showing ambiguity is the part that scores.</span></p>
+<p><b>(ii)</b> <code>S → aa | aS | a</code>: ambiguous. <code>aa</code> has two LMDs: S ⇒ aa, and S ⇒ aS ⇒ aa. Fix: <code>S → aS | a</code>.</p>
+<p><b>(iii)</b> <code>S → aS | aSbS | ε</code>: ambiguous (the dangling-else shape). <code>aab</code> has two LMDs: S ⇒ aS ⇒ aaSbS ⇒ aabS ⇒ aab and S ⇒ aSbS ⇒ aaSbS ⇒ aabS ⇒ aab.</p>
+<p><b>(iv)</b> <code>B → B∆B | b</code> is ambiguous (<code>b∆b∆b</code>). Fix that level: <code>B → B∆C | C</code>, <code>C → b</code> (assume ∆ left associative).</p>
+<p><b>Q3</b> <code>E → E+E | E&lt;E | E=E | id</code>: ambiguous (<code>id+id&lt;id</code> has two trees). Assume precedence + &gt; &lt; &gt; =, all left associative:<br><code>E → E = R | R</code>, <code>R → R &lt; P | P</code>, <code>P → P + Q | Q</code>, <code>Q → id</code>.</p>
+</details>
+</section>
+
+<!-- 7 -->
+<section class="card" id="s7"><span class="tag">topic 6 · quiz Q2 (5 marks)</span><h2>7 · Left recursion: LRG → RRG</h2>
+<div class="exact">A grammar is left-recursive if it has a non-terminal A, such that there is a derivation A ⇒⁺ Aα, for some string α.</div>
+<p>In simple words: a rule like <code>A → A α</code>, where the left side appears again as the <b>first</b> symbol on the right. A top-down parser then loops forever:</p>
+<div class="stepper-host" data-notes="loop" data-title="Why left recursion breaks a top-down parser"></div>
+<div class="formula">A → A α₁ | A α₂ | β₁ | β₂        (α = what follows A, β = the others)
+⇓
+A  → β₁ A' | β₂ A'
+A' → α₁ A' | α₂ A' | ε</div>
+<div class="memo"><b>"β goes first, α goes to the new guy, new guy ends with ε."</b></div>
+<p>Slides example (you will reuse it in LL(1)):</p>
+<div class="stepper-host" data-conv="lr" data-g="slideslr" data-title="Slides: E → E + T | T ..."></div>
+<p>Mid Autumn-23 quiz Q2 (only direct left recursion):</p>
+<div class="stepper-host" data-conv="lr" data-g="midlr" data-title="Mid Aut-23 quiz Q2"></div>
+<h3>Indirect left recursion (harder, 4 marks in Quiz 01)</h3>
+<p>Sometimes the loop goes through another non-terminal: <code>A → B c</code> and <code>B → A e</code>. Method (from the faculty solution):</p>
+<ol><li>Order the non-terminals: A, B, C (top to bottom).</li><li>Fix A's direct left recursion.</li><li>In B, replace any <code>A …</code> at the start with A's new rules. Then fix B's direct left recursion.</li><li>In C, replace <code>A …</code> and <code>B …</code> at the start. Then fix C. Box each result.</li></ol>
+<div class="stepper-host" data-conv="lr" data-g="q1lr" data-title="Quiz 01 Q3 (matches the faculty answer)"></div>
+<details class="ex"><summary>Assignment 01 Q5 (i) and (ii)</summary><div class="stepper-host" data-conv="lr" data-g="aslr1" data-title="Q5(i)"></div><div class="stepper-host" data-conv="lr" data-g="aslr2" data-title="Q5(ii)"></div></details>
+<div class="warnbox">Do not forget <b>ε</b> in the A' rule. Do not forget to add A' at the end of <b>every</b> β alternative. Keep the order of symbols inside α exactly as it was.</div>
+</section>
+
+<!-- 8 -->
+<section class="card" id="s8"><span class="tag">topic 7 · quiz Q1 (5 marks)</span><h2>8 · Deterministic vs non-deterministic grammar: left factoring (NDG → DG)</h2>
+<p>A grammar is <b>non-deterministic (NDG)</b> when two alternatives of the same non-terminal start with the same symbols. Example: <code>A → a b | a c</code>. Looking at <code>a</code>, the parser cannot know which one to pick. A <b>deterministic grammar (DG)</b> never has this problem.</p>
+<div class="formula">A → α β₁ | α β₂ | γ          (α = common prefix)
+⇓
+A  → α A' | γ
+A' → β₁ | β₂                  (if a βᵢ is empty, write ε)</div>
+<div class="memo"><b>"Pull out the common part once. The new guy gets the leftovers."</b> Repeat until no two alternatives start the same way.</div>
+<div class="stepper-host" data-conv="lf" data-g="q1lf" data-title="Quiz 01 Q2 (matches the faculty answer)"></div>
+<div class="stepper-host" data-conv="lf" data-g="midlf" data-title="Mid Aut-23 quiz Q1"></div>
+<details class="ex"><summary>Assignment 01 Q4 (i) and (ii)</summary><div class="stepper-host" data-conv="lf" data-g="aslf1" data-title="Q4(i)"></div><div class="stepper-host" data-conv="lf" data-g="aslf2" data-title="Q4(ii)"></div></details>
+<div class="warnbox">Take the <b>longest</b> common prefix, not just the first letter. If one alternative is exactly the prefix (like <code>ab</code> in <code>abcA | ab</code>), the new rule gets <b>ε</b>. Also check the new non-terminals: they can be non-deterministic again (S' → cA | cB needs S'').</div>
+<div class="tscroll"><table class="cmp"><thead><tr><th></th><th>Left recursion removal</th><th>Left factoring</th></tr></thead><tbody>
+<tr><td>Problem</td><td><code>A → A α</code> (loops forever)</td><td><code>A → α β₁ | α β₂</code> (cannot choose)</td></tr>
+<tr><td>Result</td><td>LRG → RRG</td><td>NDG → DG</td></tr>
+<tr><td>New rule ends with</td><td>A' → α A' | <b>ε</b></td><td>A' → β₁ | β₂</td></tr>
+</tbody></table></div>
+</section>
+
+<!-- 9 -->
+<section class="card" id="s9"><span class="tag">topic 8</span><h2>9 · Classification of parsers</h2>
+<svg class="dia" viewBox="0 0 640 250" role="img" aria-label="Parser classification tree">
+  <rect x="270" y="4" width="100" height="26" rx="3" class="bx"/><text x="320" y="17" class="tx">Parser</text>
+  <rect x="80" y="54" width="170" height="26" rx="3" class="bx bx-a"/><text x="165" y="67" class="tx">Top-Down (TDP)</text>
+  <rect x="390" y="54" width="170" height="26" rx="3" class="bx bx-b"/><text x="475" y="67" class="tx">Bottom-Up (BUP)</text>
+  <path class="ln" d="M320 30v12H165v12M320 42h155v12"/>
+  <rect x="6" y="104" width="140" height="34" rx="3" class="bx bx-a"/><text x="76" y="115" class="tx">with backtracking</text><text x="76" y="129" class="tx-s">brute force / rec. descent</text>
+  <rect x="160" y="104" width="140" height="34" rx="3" class="bx bx-a"/><text x="230" y="115" class="tx">no backtracking</text><text x="230" y="129" class="tx-s">predictive parser</text>
+  <path class="ln" d="M165 80v12H76v12M165 92h65v12"/>
+  <rect x="150" y="164" width="76" height="40" rx="3" class="bx bx-a"/><text x="188" y="178" class="tx-s">recursive</text><text x="188" y="192" class="tx-s">predictive</text>
+  <rect x="236" y="164" width="76" height="40" rx="3" class="bx bx-a"/><text x="274" y="178" class="tx">LL(1)</text><text x="274" y="192" class="tx-s">table driven</text>
+  <path class="ln" d="M230 138v14h-42v12M230 152h44v12"/>
+  <rect x="400" y="104" width="150" height="26" rx="3" class="bx bx-b"/><text x="475" y="117" class="tx">Shift-Reduce</text>
+  <path class="ln" d="M475 80v24"/>
+  <rect x="340" y="160" width="120" height="34" rx="3" class="bx bx-b"/><text x="400" y="171" class="tx">Operator</text><text x="400" y="185" class="tx">precedence</text>
+  <rect x="480" y="160" width="150" height="34" rx="3" class="bx bx-b"/><text x="555" y="171" class="tx">LR parsers</text><text x="555" y="185" class="tx-s">LR(0) SLR(1) LALR(1) CLR(1)</text>
+  <path class="ln" d="M475 130v16h-75v14M475 146h80v14"/>
+  <text x="320" y="236" class="tx-s">TDP uses LMD · BUP uses the reverse of RMD · both read input left to right</text>
+</svg>
+<div class="tscroll"><table class="cmp"><thead><tr><th>Top-down parser</th><th>Bottom-up parser</th></tr></thead><tbody>
+<tr><td>Starts from the <b>top</b> (start symbol) and goes down to the leaves.</td><td>Starts from the <b>leaves</b> (input) and goes up to the start symbol.</td></tr>
+<tr><td>Uses <b>Left Most Derivation</b>.</td><td>Uses <b>Reverse of Right Most Derivation</b>.</td></tr>
+<tr><td>Main decision: <b>what</b> production rule to use.</td><td>Main decision: <b>when</b> to use a rule to reduce.</td></tr>
+<tr><td>Cannot use left recursion. Predictive needs a deterministic grammar.</td><td>Can handle left recursion.</td></tr>
+</tbody></table></div>
+<div class="exact">1. Top-Down Parser: The parse tree is created top to bottom, starting from the root. 2. Bottom-Up Parser: The parse tree is created bottom to top, starting from the leaves. Both Top-Down and Bottom-Up parsers scan the input from left to right (One symbol at a time).</div>
+<div class="stepper-host" data-deriv="tdp" data-title="Slides: top-down on abbcde (LMD)"></div>
+<div class="stepper-host" data-deriv="bup" data-title="Slides: bottom-up = this RMD read in reverse"></div>
+<div class="warnbox">Brute force parser = top-down <b>with backtracking</b>. It is <b>not</b> bottom-up. (Mid Aut-23 Q3(e) asked exactly this.)</div>
+</section>
+
+<!-- 10 -->
+<section class="card" id="s10"><span class="tag">topics 9–10</span><h2>10 · Introduction to top-down parsing</h2>
+<p>Two kinds of top-down parser:</p>
+<div class="grid">
+  <div class="mini-card"><b>Recursive descent (backtracking)</b>One procedure per non-terminal. Tries the alternatives one by one. Goes back on failure.<small>general, but not efficient</small></div>
+  <div class="mini-card"><b>Predictive (no backtracking)</b>Looks at the next token and picks the right rule the first time.<small>efficient · needs an LL(1) grammar</small></div>
+</div>
+<div class="stepper-host" data-notes="backtrack" data-title="Backtracking, one step at a time"></div>
+<div class="exact">When re-writing a non-terminal in a derivation step, a predictive parser can uniquely choose a production rule by just looking the current symbol in the input string.</div>
+</section>
+
+<!-- 11 -->
+<section class="card" id="s11"><span class="tag">topic 11</span><h2>11 · The LL(1) parser: the idea</h2>
+<div class="flow"><span>L</span><i>= Left-to-right scanning of input</i></div>
+<div class="flow"><span>L</span><i>= Leftmost derivation (top-down)</i></div>
+<div class="flow"><span>(1)</span><i>= 1 look-ahead token to decide</i></div>
+<div class="exact">First L: Left to Right Scanning. Second L: Leftmost derivation. 1: one input symbol of look-ahead at each step to make parsing action decisions.</div>
+<p>From your notes, LL(1) works only on a grammar that is:</p>
+<div class="key">1. <b>Unambiguous</b> (lesson 6) · 2. <b>No left recursion</b> (lesson 7) · 3. <b>Deterministic</b>, left-factored (lesson 8)</div>
+<svg class="dia" viewBox="0 0 400 170" role="img" aria-label="LL(1) parser model">
+  <rect x="80" y="6" width="240" height="26" rx="3" class="bx"/><text x="200" y="19" class="tx">input buffer:  ( id + id ) * id $</text>
+  <rect x="150" y="62" width="100" height="40" rx="3" class="bx bx-a"/><text x="200" y="76" class="tx">LL(1)</text><text x="200" y="90" class="tx">parser</text>
+  <rect x="10" y="56" width="80" height="80" rx="3" class="bx bx-c"/><text x="50" y="72" class="tx">stack</text><text x="50" y="92" class="tx-s">E</text><text x="50" y="106" class="tx-s">$</text>
+  <rect x="290" y="62" width="100" height="40" rx="3" class="bx bx-b"/><text x="340" y="76" class="tx">parsing</text><text x="340" y="90" class="tx">table M</text>
+  <rect x="150" y="132" width="100" height="26" rx="3" class="bx"/><text x="200" y="145" class="tx">output (rules)</text>
+  <path class="ln" d="M200 32v30M90 82h60M250 82h40M200 102v30"/>
+</svg>
+<p>The full method has 4 parts. Do them in this order in the exam:</p>
+<div class="flow"><span>1 FIRST</span><i>→</i><span>2 FOLLOW</span><i>→</i><span>3 table</span><i>→</i><span>4 parse the string</span><i>→</i><span>tree + conclusion</span></div>
+<div class="warnbox">If the grammar in the question is left recursive (for example <code>E → E + T</code>), remove left recursion first (lesson 7), then do LL(1). The class grammar <code>E → TE'</code> … is exactly the slides grammar after this step, with F renamed to M.</div>
+</section>
+
+<!-- 12 -->
+<section class="card" id="s12"><span class="tag">topic 12</span><h2>12 · FIRST and FOLLOW sets</h2>
+<h3>FIRST</h3>
+<div class="exact">The FIRST set of a grammar symbol X, written as FIRST(X), contains the terminals that can appear at the beginning of strings derived from X.<br>1. If X is a terminal, then FIRST(X) = {X}. 2. If X → ε, include ε in FIRST(X). 3. If X → Y1Y2…Yn, add FIRST(Y1) excluding ε. If Y1 can derive ε, continue to Y2 and so on. 4. If every symbol on the right-hand side can derive ε, include ε.</div>
+<div class="key"><b>Baby version (your notes):</b> look at the <b>first</b> symbol of each alternative.<br>• terminal → put it in FIRST. Done.<br>• ε → put ε in FIRST.<br>• non-terminal → find <b>its</b> FIRST and copy it (without ε). If it had ε, also look at the next symbol.</div>
+<div class="stepper-host" data-ll1="first" data-g="notes" data-title="FIRST for the class grammar E → TE' …"></div>
+<h3>FOLLOW</h3>
+<div class="exact">The FOLLOW set of a non-terminal A, written as FOLLOW(A), contains the terminals that can appear immediately after A in a sentential form.<br>1. Put the end marker $ in FOLLOW(S), where S is the start symbol. 2. If A → αBβ, add FIRST(β) excluding ε to FOLLOW(B). 3. If A → αB or A → αBβ where β ⇒* ε, add FOLLOW(A) to FOLLOW(B).</div>
+<div class="key"><b>Baby version (your notes):</b> start symbol gets <b>$</b>. Then find B on every <b>right side</b> and look at what is just after it.<br>• terminal → add it.<br>• non-terminal → add its FIRST without ε. If it has ε, keep looking right.<br>• nothing → add FOLLOW of the <b>parent</b> (the left side).</div>
+<div class="stepper-host" data-ll1="follow" data-g="notes" data-title="FOLLOW for the class grammar"></div>
+<div class="warnbox">FOLLOW <b>never</b> has ε. FIRST never has $. FOLLOW is only for non-terminals. Most lost marks: forgetting $ in the start symbol, and forgetting "nothing after → add FOLLOW(parent)".</div>
+</section>
+
+<!-- 13 -->
+<section class="card" id="s13"><span class="tag">topic 13</span><h2>13 · Building the LL(1) parsing table</h2>
+<div class="key"><b>Rule for each production A → α:</b><br>1. For every terminal <code>a</code> in FIRST(α), put <code>A → α</code> in M[A, a].<br>2. If ε is in FIRST(α), put <code>A → α</code> in M[A, b] for every <code>b</code> in FOLLOW(A) (this includes $).<br>3. Empty cells = error.</div>
+<div class="memo">Your notes: <b>"Find out from FIRST: which rule gives which terminal. If ε is in FIRST, go to FOLLOW."</b></div>
+<div class="stepper-host" data-ll1="table" data-g="notes" data-title="Table for the class grammar (one cell per step)"></div>
+</section>
+
+<!-- 14 -->
+<section class="card" id="s14"><span class="tag">topic 13 · mid Q2 (8 marks)</span><h2>14 · Parsing a string with the stack</h2>
+<div class="key"><b>The loop (repeat until $ meets $):</b><br>• Start: stack = <code>$ S</code>, buffer = <code>input $</code>, LA at the first token.<br>• Top is a <b>non-terminal</b> A: look at M[A, LA]. Pop A. Push the right side <b>reversed</b>. (ε: push nothing.)<br>• Top is a <b>terminal</b>: it must equal LA. Pop it and move LA right (match).<br>• Top = $ and LA = $: <b>accept</b>. Empty cell or mismatch: <b>error</b>.</div>
+<div class="stepper-host" data-ll1="parse" data-g="notes" data-input="( id + id ) * id" data-title="Notes: parse (id+id)*id"></div>
+<p>Quiz 02 (practice LL(1)), the full exam answer, every phase:</p>
+<div class="stepper-host" data-ll1="full" data-g="quiz2" data-input="int id , id ;" data-title="Quiz 02: D → TL; … parse int id,id;"></div>
+<details class="ex"><summary>Exam-format answer for Quiz 02 (what to write on paper)</summary><div data-answer data-g="quiz2" data-input="int id , id ;"></div></details>
+<h3>When parsing fails</h3>
+<p>The question says "If parsing is not possible, point out the reasons." Practice problem 02, grammar <code>S → aAb</code>, <code>A → cB</code>, <code>B → d | ε</code>:</p>
+<div class="stepper-host" data-ll1="parse" data-g="pp1" data-input="a a a b b c" data-title="Practice 02: parse aaabbc (fails)"></div>
+<div class="stepper-host" data-ll1="parse" data-g="pp2" data-input="a c d b" data-title="Practice 02 Q2: S → AB … parse acdb (fails)"></div>
+<div class="warnbox">Write the reason clearly: "Top = A, LA = a, and M[A, a] is empty ∴ error, parsing is not possible." Do not just write "error".</div>
+</section>
+
+<!-- 15 -->
+<section class="card" id="s15"><span class="tag">topic 14</span><h2>15 · FIRST–FOLLOW conflicts (when a grammar is NOT LL(1))</h2>
+<div class="exact">A FIRST/FIRST conflict occurs when two or more alternative productions of the same non-terminal have overlapping FIRST sets.</div>
+<div class="exact">A FIRST/FOLLOW conflict occurs when a production can derive the empty string ε and a terminal that can begin another alternative also belongs to the FOLLOW set of the non-terminal.</div>
+<div class="tscroll"><table class="cmp"><thead><tr><th></th><th>FIRST/FIRST</th><th>FIRST/FOLLOW</th></tr></thead><tbody>
+<tr><td>Sign</td><td>Two alternatives begin with the same terminal</td><td>An alternative can be ε, and FOLLOW overlaps another alternative's FIRST</td></tr>
+<tr><td>Compare</td><td>FIRST of the alternatives</td><td>FIRST of the non-empty alternative vs FOLLOW of the left side</td></tr>
+<tr><td>In the table</td><td colspan="2">Two rules in the same cell</td></tr>
+<tr><td>Fix</td><td>Left factoring / redesign</td><td>Restructure, remove ε rules</td></tr>
+</tbody></table></div>
+<div class="stepper-host" data-ll1="table" data-g="ffConf" data-title="Slides + notes: S → aS | B, B → abB | ε (FIRST/FIRST)"></div>
+<div class="stepper-host" data-ll1="table" data-g="foConf" data-title="Slides: S → Aa, A → a | ε (FIRST/FOLLOW)"></div>
+<div class="stepper-host" data-ll1="table" data-g="notesConf" data-title="Notes page 1: S → a | B, B → aB | a"></div>
+</section>
+
+<!-- 16 -->
+<section class="card" id="s16"><span class="tag">worked past papers</span><h2>16 · Past papers, fully solved</h2>
+<h3>Mid Autumn-23 Q2 [8]</h3>
+<p>Write the First() and Follow() of the following Grammar. Draw LL(1) Parsing Table and Parse the string <code>( ) g c c d c e</code> showing all steps. If parsing is not possible, point out the reasons. V = {E, U, V, W, X, Y}, T = {c, d, e, (, ), g, ε}, S = {E}</p>
+<div class="formula">E → cUVW | XYE
+U → c | ε
+V → dU | ε
+W → e | ε
+X → e | (Y)
+Y → g | ε</div>
+<div class="stepper-host" data-ll1="full" data-g="mid23" data-input="( ) g c c d c e" data-title="Mid Aut-23 Q2: every step"></div>
+<details class="ex"><summary>Exam-format answer (write this)</summary><div data-answer data-g="mid23" data-input="( ) g c c d c e"></div></details>
+<h3>Mid Autumn-23 Q3 [5]: True / False</h3>
+<div class="cls" data-a="F" data-why="Left recursion makes a top-down parser loop forever (A ⇒ Aα ⇒ Aαα …)."><div class="q">(a) All TDP can use Left Recursive Grammar (LRG).</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="F" data-why="Predictive parsers (LL(1)) need a deterministic grammar. With a common prefix they cannot choose. Only backtracking parsers can cope, so not ALL TDP."><div class="q">(b) All TDP can use Non-deterministic Grammar (NDG).</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="F" data-why="Textbook answer: FIRST can still be found. For A → Aα | β, FIRST(A) = FIRST(β) (plus FIRST(α) if β can be ε). Only the naive recursive method loops. If your teacher said otherwise in class, follow the class."><div class="q">(c) From LRG grammar complete First set can't be found.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="F" data-why="FOLLOW sets are computed from where a symbol appears on right sides. Left recursion does not stop this. (Same note as (c).)"><div class="q">(d) From LRG grammar complete Follow set can't be found.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="F" data-why="Brute force = top-down parsing with backtracking."><div class="q">(e) Brute Force Parser is a BUP.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<p class="muted">(c) and (d) are not settled by the slides. The answers above are the textbook view, which the computer check agrees with. Always write a one-line reason, so you earn marks either way.</p>
+<h3>Mid Autumn-23 quiz Q1 and Q2</h3><p>Solved step by step in lessons 7 and 8.</p>
+<h3>Extra LL(1) drill (from Assignment 01's grammar)</h3>
+<p>Assignment Q1 grammar <code>S → (L) | a</code>, <code>L → L, S | S</code> is left recursive. Remove it first: <code>L → S L'</code>, <code>L' → , S L' | ε</code>. Then:</p>
+<div class="stepper-host" data-ll1="full" data-g="drill" data-input="( a , ( a , a ) )" data-title="Drill: parse (a,(a,a))"></div>
+</section>
+
+<!-- 17 -->
+<section class="card" id="s17"><span class="tag">practice paper · 30 marks · 90 min</span><h2>17 · Practice paper (same shape as the real one)</h2>
+<p>New questions of the same type and difficulty. Write on paper first. Then open the model answer, tick each step you got right, and read your score.</p>
+<div class="timer"><span id="pp-time">90:00</span><button id="pp-start" class="primary">Start</button><button id="pp-reset">Reset</button><span class="muted">Suggested: Q1 20 min · Q2 30 min · Q3 7 min · quiz 15 + 15 min</span></div>
+<div class="paper">
+<div class="phead">Independent University, Bangladesh<br>CSE-313 Mid + Quiz (Practice), Time: 1h30m<br>Mid Question (Total marks: 20)</div>
+
+<div class="pq"><span class="marks">[7]</span><p><b>1.</b> Prove whether the following Grammar is Ambiguous or NOT. If the grammar is ambiguous, convert it to unambiguous form:</p><div class="formula">S → S # S | S & S | ( S ) | a</div>
+<details class="ex"><summary>Show model answer</summary>
+<div class="stepper-host" data-deriv="ppA" data-title="LMD 1 of a # a & a"></div><div class="stepper-host" data-deriv="ppB" data-title="LMD 2 of a # a & a"></div>
+<div class="stepper-host" data-notes="ppq1" data-title="Write-up"></div></details>
+<div class="scheme"><label><input type="checkbox" data-m="1"> States "ambiguous" [1]</label><label><input type="checkbox" data-m="1"> A correct string with two operators [1]</label><label><input type="checkbox" data-m="1.5"> First LMD / parse tree correct [1.5]</label><label><input type="checkbox" data-m="1.5"> Second, different LMD / parse tree correct [1.5]</label><label><input type="checkbox" data-m="0.5"> Precedence + associativity assumption written [0.5]</label><label><input type="checkbox" data-m="1.5"> Correct layered unambiguous grammar (keeps ( S ) and a at the bottom) [1.5]</label><span class="pq-score"></span></div>
+<p class="muted">Ways to lose marks: two trees that are really the same tree; forgetting <code>( S )</code> in the new grammar; no assumption written.</p></div>
+
+<div class="pq"><span class="marks">[8]</span><p><b>2.</b> Write the First() and Follow() of the following Grammar. Draw LL(1) Parsing Table and parse the string <code>acbbgh</code> showing all steps. If parsing is not possible, point out the reasons. Non-terminals = {S, B, C, D, E, F}, Terminals = {a, b, c, f, g, h, ε}, Start symbol = {S}.</p><div class="formula">S → aBDh
+B → cC
+C → bC | ε
+D → EF
+E → g | ε
+F → f | ε</div>
+<details class="ex"><summary>Show model answer</summary><div class="stepper-host" data-ll1="full" data-g="paperQ2" data-input="a c b b g h" data-title="Practice Q2: every step"></div><div data-answer data-g="paperQ2" data-input="a c b b g h"></div></details>
+<div class="scheme"><label><input type="checkbox" data-m="2"> All six FIRST sets correct [2]</label><label><input type="checkbox" data-m="2"> All six FOLLOW sets correct [2]</label><label><input type="checkbox" data-m="2"> Table correct (ε rules placed by FOLLOW) [2]</label><label><input type="checkbox" data-m="0.5"> "No cell has more than one rule ∴ LL(1)" [0.5]</label><label><input type="checkbox" data-m="1"> Stack steps correct with pop order [1]</label><label><input type="checkbox" data-m="0.5"> Parse tree + conclusion [0.5]</label><span class="pq-score"></span></div>
+<p class="muted">Ways to lose marks: FOLLOW(B) misses f or h (D and E, F can all be empty, so look past them to h); putting ε as a table column.</p></div>
+
+<div class="pq"><span class="marks">[5]</span><p><b>3.</b> Find True/False of the following statements:</p>
+<details class="ex"><summary>Show model answer</summary><p>(a) LL(1) parser uses the rightmost derivation. <b>False</b>: the second L means leftmost.<br>(b) A bottom-up parser builds the parse tree from the leaves to the root. <b>True</b>.<br>(c) The FOLLOW set of a non-terminal can contain ε. <b>False</b>: FOLLOW holds terminals and $ only.<br>(d) An ambiguous grammar can be LL(1). <b>False</b>: an ambiguous grammar always gives a cell with two rules.<br>(e) Recursive descent parser with backtracking is a top-down parser. <b>True</b>.</p></details>
+<p>(a) LL(1) parser uses the rightmost derivation.<br>(b) A bottom-up parser builds the parse tree from the leaves to the root.<br>(c) The FOLLOW set of a non-terminal can contain ε.<br>(d) An ambiguous grammar can be LL(1).<br>(e) Recursive descent parser with backtracking is a top-down parser.</p>
+<div class="scheme"><label><input type="checkbox" data-m="1"> (a) [1]</label><label><input type="checkbox" data-m="1"> (b) [1]</label><label><input type="checkbox" data-m="1"> (c) [1]</label><label><input type="checkbox" data-m="1"> (d) [1]</label><label><input type="checkbox" data-m="1"> (e) [1]</label><span class="pq-score"></span></div></div>
+
+<div class="phead" style="margin-top:14px">Quiz Question (Total marks: 10)</div>
+<div class="pq"><span class="marks">[5]</span><p><b>1.</b> Convert the following Non Deterministic Grammar (NDG) to Deterministic Grammar (DG):</p><div class="formula">S → aabS | aaC | aab | b
+C → cC | c</div>
+<details class="ex"><summary>Show model answer</summary><div class="stepper-host" data-conv="lf" data-g="ppqlf" data-title="Practice quiz Q1"></div></details>
+<div class="scheme"><label><input type="checkbox" data-m="1.5"> S → aaS' | b [1.5]</label><label><input type="checkbox" data-m="2"> S' → bS'' | C and S'' → S | ε [2]</label><label><input type="checkbox" data-m="1.5"> C → cC', C' → C | ε [1.5]</label><span class="pq-score"></span></div>
+<p class="muted">Ways to lose marks: stopping at S' → bS | C | b (still non-deterministic); forgetting C.</p></div>
+
+<div class="pq"><span class="marks">[5]</span><p><b>2.</b> Convert the following Left Recursive Grammar (LRG) to Right Recursive Grammar (RRG):</p><div class="formula">P → P ! Q | Q
+Q → Q ? r | s t</div>
+<details class="ex"><summary>Show model answer</summary><div class="stepper-host" data-conv="lr" data-g="ppqlr" data-title="Practice quiz Q2"></div></details>
+<div class="scheme"><label><input type="checkbox" data-m="2.5"> P → QP', P' → !QP' | ε [2.5]</label><label><input type="checkbox" data-m="2.5"> Q → stQ', Q' → ?rQ' | ε [2.5]</label><span class="pq-score"></span></div>
+<p class="muted">Ways to lose marks: missing ε; writing P' → !Q (no P' at the end).</p></div>
+
+<p class="total">Total: <span id="pp-total">0 / 30</span></p><p id="pp-msg"></p>
+</div>
+</section>
+
+<!-- 18 -->
+<section class="card" id="s18"><span class="tag">quick recall</span><h2>18 · True / False drill (with reasons)</h2>
+<p>The real paper has 5 marks of True/False. Tap an answer. Read the reason even when you are right.</p>
+<div class="cls" data-a="F" data-why="Left factoring removes common prefixes (non-determinism). Left recursion is removed by the A → βA' formula."><div class="q">Left factoring removes left recursion.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="T" data-why="Rule 1 of FOLLOW."><div class="q">$ is always in FOLLOW of the start symbol.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="T" data-why="If a grammar is LL(1), every cell has at most one rule, so each string has one derivation."><div class="q">Every LL(1) grammar is unambiguous.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="T" data-why="Slides: bottom-up uses the reverse of rightmost derivation."><div class="q">Bottom-up parsing uses the reverse of the rightmost derivation.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="F" data-why="The lexical analyzer makes tokens. The syntax analyzer (parser) builds the parse tree."><div class="q">The lexical analyzer builds the parse tree.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="F" data-why="Columns are terminals and $. ε rules are placed using FOLLOW."><div class="q">ε can be a column in the LL(1) parsing table.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="T" data-why="FIRST rule 1."><div class="q">FIRST of a terminal is the terminal itself.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="F" data-why="The new grammar makes exactly the same strings. Only the shape of the trees changes."><div class="q">Removing left recursion changes the language of the grammar.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="F" data-why="Finite automata cannot remember nesting depth. A CFG is needed."><div class="q">Regular expressions can check balanced parentheses.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="T" data-why="Two rules in one cell = the parser cannot choose = not LL(1)."><div class="q">If two rules fall in one cell of the table, the grammar is not LL(1).</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="F" data-why="A predictive parser never backtracks. It uses the look-ahead and the table."><div class="q">A predictive parser needs backtracking.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="T" data-why="Lower precedence = upper level of the grammar (closer to the start symbol)."><div class="q">In an unambiguous expression grammar, + is defined at a higher level (closer to the start symbol) than *.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="F" data-why="^ is right associative, so its rule is right recursive: F → G ^ F."><div class="q">The rule for ^ (power) should be left recursive.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="T" data-why="Phases 1–3 (lexical, syntax, semantic) form the analysis part."><div class="q">Semantic analysis belongs to the analysis (front end) part of the compiler.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="F" data-why="An interpreter does not produce a target program; it executes directly."><div class="q">An interpreter produces a target program in machine code.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+</section>
+
+<!-- 19 -->
+<section class="card" id="s19"><span class="tag">tool</span><h2>19 · Solver: type any grammar, get every step</h2>
+<p>Use it to check your paper answers. One rule per line. Separate symbols with <b>spaces</b>. Use <code>-&gt;</code> and <code>|</code>. Write ε as <code>ε</code> or <code>eps</code>. The first left side is the start symbol.</p>
+<div class="loadrow"><span class="muted">load:</span>
+<button data-load="notes::( id + id ) * id">class E→TE'</button><button data-load="mid23::( ) g c c d c e">mid Aut-23 Q2</button><button data-load="quiz2::int id , id ;">quiz 02</button><button data-load="paperQ2::a c f h">practice Q2</button><button data-load="pp1::a c d b">practice 02 Q1</button><button data-load="slideslr::::lr">left recursion</button><button data-load="midlf::::lf">left factoring</button></div>
+<textarea id="pg-g" aria-label="grammar">E -> T E'
+E' -> + T E' | ε
+T -> M T'
+T' -> * M T' | ε
+M -> id | ( E )</textarea>
+<div class="row"><input type="text" id="pg-s" value="id + id * id" aria-label="string to parse"><select id="pg-mode" aria-label="what to do"><option value="ll1">LL(1): FIRST, FOLLOW, table, parse</option><option value="lr">Remove left recursion (LRG → RRG)</option><option value="lf">Left factoring (NDG → DG)</option></select><button id="pg-run" class="primary">Solve step by step</button></div>
+<div id="pg-out"></div>
+</section>
+
+<!-- 20 -->
+<section class="card" id="s20"><span class="tag">morning review</span><h2>20 · Cheat sheet and exam checklist</h2>
+<div class="formula">LEFT RECURSION   A → Aα | β        ⇒  A → βA'      A' → αA' | ε
+LEFT FACTORING   A → αβ1 | αβ2     ⇒  A → αA'      A' → β1 | β2
+AMBIGUITY FIX    low precedence on top; left assoc → E → E op T
+                 right assoc (^) → F → G ^ F; operands at the bottom
+FIRST            first symbol: terminal → add; ε → add ε; NT → copy (no ε), if ε go on
+FOLLOW           start gets $; after B: terminal → add; NT → FIRST (no ε);
+                 nothing / all-ε → add FOLLOW(parent)
+TABLE            A → α into M[A,a] for a ∈ FIRST(α); if ε ∈ FIRST(α): a ∈ FOLLOW(A)
+PARSE            stack $S; NT: pop, push RHS reversed; T: match, move LA; $=$ accept</div>
+<h3>Checklist: tick when you can do it without looking</h3>
+<ul class="check">
+<li><label><input type="checkbox"> Name the 6 phases in order and say what each does</label></li>
+<li><label><input type="checkbox"> Define token, lexeme, pattern; compiler vs interpreter</label></li>
+<li><label><input type="checkbox"> Read an RE like (a|b)*ab and list 4 strings</label></li>
+<li><label><input type="checkbox"> Write an LMD and an RMD and draw the parse tree</label></li>
+<li><label><input type="checkbox"> Show ambiguity: string + two LMD trees + one-sentence reason</label></li>
+<li><label><input type="checkbox"> Convert to unambiguous with a written assumption</label></li>
+<li><label><input type="checkbox"> Remove direct left recursion; do one indirect example</label></li>
+<li><label><input type="checkbox"> Left factor, including the second round (S'')</label></li>
+<li><label><input type="checkbox"> Draw the parser classification tree; TDP vs BUP table</label></li>
+<li><label><input type="checkbox"> FIRST and FOLLOW for a 6-rule grammar with ε</label></li>
+<li><label><input type="checkbox"> Fill the LL(1) table and say "∴ LL(1)" or name the conflict</label></li>
+<li><label><input type="checkbox"> Parse a string with the horizontal stack and pop numbers</label></li>
+<li><label><input type="checkbox"> Write the reason when parsing fails</label></li>
+</ul>
+</section>
+<footer>Sources: CSE 313 lecture slides by Nazma Sarker (Introduction, Lecture 1, Lexical Analysis 1–2, Parsing I–III, FIRST-FOLLOW Conflicts), Quiz 01 solution, Quiz 02 LL(1) solution, Assignment 01, Practice Problem 02, Mid Autumn-23 SET-A, student class notes. Textbook: Aho, Lam, Sethi, Ullman, <i>Compilers: Principles, Techniques, and Tools</i>, ch. 4. All grammar answers checked by computer.</footer>
+</div>
+<button id="theme" aria-label="Switch light or dark theme">◐ theme</button>
+<script>
+/* ===== Grammar engine: every step is computed, never typed by hand ===== */
+const EPS = 'ε';
+
+function parseGrammar(text) {
+  const order = [], rules = {};
+  const lines = text.replace(/→/g, '->').split('\n').map(l => l.trim()).filter(Boolean);
+  for (const line of lines) {
+    const k = line.indexOf('->');
+    if (k < 0) throw new Error('Missing "->" in: ' + line);
+    const lhs = line.slice(0, k).trim();
+    if (!lhs || /\s/.test(lhs)) throw new Error('Left side must be one non-terminal: ' + line);
+    const alts = line.slice(k + 2).split('|').map(a => a.trim().split(/\s+/).filter(Boolean))
+      .map(a => (a.length === 1 && (a[0] === EPS || a[0] === 'eps' || a[0] === '∈')) ? [] : a);
+    if (!rules[lhs]) { rules[lhs] = []; order.push(lhs); }
+    rules[lhs].push(...alts);
+  }
+  if (!order.length) throw new Error('Grammar is empty.');
+  const nts = new Set(order);
+  const terms = [];
+  for (const A of order) for (const alt of rules[A]) for (const s of alt)
+    if (!nts.has(s) && !terms.includes(s)) terms.push(s);
+  const numbered = [];
+  for (const A of order) rules[A].forEach((alt, i) => numbered.push({ lhs: A, alt: i, rhs: alt, n: numbered.length + 1 }));
+  return { order, rules, nts, terms, numbered, start: order[0] };
+}
+
+const isNT = (G, s) => G.nts.has(s);
+const fmt = a => a.length ? a.join(' ') : EPS;
+const setStr = s => '{ ' + [...s].join(', ') + ' }';
+const snap = obj => { const o = {}; for (const k in obj) o[k] = [...obj[k]]; return o; };
+
+function firstOfSeq(G, seq, F) {
+  const out = new Set();
+  for (const s of seq) {
+    const f = isNT(G, s) ? F[s] : new Set([s]);
+    for (const x of f) if (x !== EPS) out.add(x);
+    if (!f.has(EPS)) return out;
+  }
+  out.add(EPS);
+  return out;
+}
+
+function computeFirst(G) {
+  const F = {}; G.order.forEach(A => F[A] = new Set());
+  let ch = true;
+  while (ch) { ch = false;
+    for (const A of G.order) for (const alt of G.rules[A]) for (const x of firstOfSeq(G, alt, F))
+      if (!F[A].has(x)) { F[A].add(x); ch = true; } }
+  return F;
+}
+
+function computeFollow(G, F) {
+  const FO = {}; G.order.forEach(A => FO[A] = new Set());
+  FO[G.start].add('$');
+  let ch = true;
+  while (ch) { ch = false;
+    for (const A of G.order) for (const alt of G.rules[A]) alt.forEach((B, i) => {
+      if (!isNT(G, B)) return;
+      const f = firstOfSeq(G, alt.slice(i + 1), F);
+      const add = [...f].filter(x => x !== EPS);
+      if (f.has(EPS)) add.push(...FO[A]);
+      for (const x of add) if (!FO[B].has(x)) { FO[B].add(x); ch = true; }
+    }); }
+  return FO;
+}
+
+function leftRecursive(G) {
+  // returns list of NTs that can derive themselves at the left
+  const F0 = computeFirst(G), bad = [];
+  for (const A of G.order) {
+    const seen = new Set(), stack = [A];
+    while (stack.length) {
+      const X = stack.pop();
+      for (const alt of G.rules[X]) for (const s of alt) {
+        if (!isNT(G, s)) break;
+        if (s === A) { if (!bad.includes(A)) bad.push(A); }
+        else if (!seen.has(s)) { seen.add(s); stack.push(s); }
+        if (!F0[s].has(EPS)) break;
+      }
+    }
+  }
+  return bad;
+}
+
+/* ---------- FIRST, step by step ---------- */
+function firstSteps(G) {
+  const F = {}, state = {}, steps = [];
+  const push = (msg, extra = {}) => steps.push(Object.assign({ msg, sets: snap(F), done: Object.keys(state).filter(k => state[k] === 'done') }, extra));
+  const lr = leftRecursive(G);
+  if (lr.length) {
+    push(`<b>Stop.</b> ${lr.map(x => `<code>${x}</code>`).join(', ')} is left recursive (it starts with itself). FIRST would loop forever, and LL(1) needs <b>no left recursion</b>. Remove left recursion first (Lesson 7).`, { error: true });
+    return steps;
+  }
+  function compute(A) {
+    state[A] = 'busy'; F[A] = F[A] || new Set();
+    push(`Find <b>FIRST(${A})</b>. FIRST(${A}) = the terminals that can come <b>first</b> in anything ${A} makes. Look at each alternative of ${A}, one by one.`, { focus: A });
+    G.rules[A].forEach((alt, ai) => {
+      if (!alt.length) {
+        F[A].add(EPS);
+        push(`Alternative <code>${A} → ε</code>. ${A} can be empty. <b>Add ε</b> to FIRST(${A}).`, { focus: A, alt: [A, ai], added: [A, [EPS]] });
+        return;
+      }
+      for (let i = 0; i < alt.length; i++) {
+        const X = alt[i];
+        if (!isNT(G, X)) {
+          const isNew = !F[A].has(X); F[A].add(X);
+          push(`Alternative <code>${A} → ${fmt(alt)}</code>. ${i ? 'Now the next' : 'The first'} symbol is <code>${X}</code>. It is a <b>terminal</b>. <b>Add ${X}</b>${isNew ? '' : ' (already there)'} and stop for this alternative.`, { focus: A, alt: [A, ai], sym: i, added: [A, [X]] });
+          return;
+        }
+        if (state[X] !== 'done') {
+          push(`Alternative <code>${A} → ${fmt(alt)}</code>. ${i ? 'Next' : 'First'} symbol <code>${X}</code> is a <b>non-terminal</b>. We need FIRST(${X}) before we can continue. <b>Pause ${A}</b> and solve ${X} first.`, { focus: A, alt: [A, ai], sym: i });
+          compute(X);
+          push(`FIRST(${X}) is ready. <b>Go back</b> to ${A}, alternative <code>${A} → ${fmt(alt)}</code>.`, { focus: A, alt: [A, ai], sym: i });
+        }
+        const add = [...F[X]].filter(x => x !== EPS); add.forEach(x => F[A].add(x));
+        const vanish = F[X].has(EPS);
+        if (!vanish) {
+          push(`Copy FIRST(${X}) = ${setStr(F[X])} into FIRST(${A}). ${X} cannot be empty (no ε), so <b>stop</b> here.`, { focus: A, alt: [A, ai], sym: i, added: [A, add] });
+          return;
+        }
+        if (i === alt.length - 1) {
+          F[A].add(EPS);
+          push(`Copy FIRST(${X}) without ε = ${setStr(add)}. ${X} can be empty, and it is the <b>last</b> symbol. So the whole alternative can be empty: <b>add ε</b> too.`, { focus: A, alt: [A, ai], sym: i, added: [A, [...add, EPS]] });
+          return;
+        }
+        push(`Copy FIRST(${X}) <b>without ε</b> = ${setStr(add)}. ${X} can be empty (it has ε). So we must <b>also look at the next symbol</b>, <code>${alt[i + 1]}</code>.`, { focus: A, alt: [A, ai], sym: i, added: [A, add] });
+      }
+    });
+    state[A] = 'done';
+    push(`<b>FIRST(${A}) = ${setStr(F[A])}</b> is complete.`, { focus: A, complete: A });
+  }
+  for (const A of G.order) if (state[A] !== 'done') compute(A);
+  push(`All FIRST sets are complete. Check: every set holds only terminals and maybe ε.`, { final: true });
+  return steps;
+}
+
+/* ---------- FOLLOW, step by step ---------- */
+function followSteps(G) {
+  const F = computeFirst(G), FO = {}, state = {}, steps = [];
+  const push = (msg, extra = {}) => steps.push(Object.assign({ msg, sets: snap(FO), first: snap(F) }, extra));
+  const borrowed = [];
+  function compute(B) {
+    state[B] = 'busy'; FO[B] = FO[B] || new Set();
+    push(`Find <b>FOLLOW(${B})</b>. FOLLOW(${B}) = the terminals that can come <b>right after</b> ${B}.`, { focus: B });
+    if (B === G.start) {
+      FO[B].add('$');
+      push(`${B} is the <b>start symbol</b>. Rule 1: always put <b>$</b> (end of input) in FOLLOW(${B}).`, { focus: B, added: [B, ['$']] });
+    }
+    const occ = [];
+    for (const A of G.order) G.rules[A].forEach((alt, ai) => alt.forEach((s, p) => { if (s === B) occ.push([A, ai, p]); }));
+    if (!occ.length) push(`${B} does not appear on any right side. Nothing more to add.`, { focus: B });
+    else push(`Search every right side for <code>${B}</code>. It appears ${occ.length} time${occ.length > 1 ? 's' : ''}. We check each place.`, { focus: B, occ });
+    for (const [A, ai, p] of occ) {
+      const alt = G.rules[A][ai];
+      for (let j = p + 1; ; j++) {
+        const where = { focus: B, alt: [A, ai], sym: p, look: j };
+        if (j === alt.length) {
+          const tail = j === p + 1 ? 'Nothing comes after' : 'Everything after';
+          const tail2 = j === p + 1 ? '' : ' can be empty, so it is as if nothing comes after';
+          if (A === B) { push(`In <code>${A} → ${fmt(alt)}</code>: ${tail} ${B}${tail2}. Rule 3 says add FOLLOW(${A}). But ${A} is ${B} itself, so this adds nothing new. Skip.`, where); break; }
+          if (state[A] !== 'done') {
+            if (state[A] === 'busy') {
+              borrowed.push([B, A]);
+              push(`In <code>${A} → ${fmt(alt)}</code>: ${tail} ${B}${tail2}. We need FOLLOW(${A}), but we are still working on it. Take what it has <b>now</b> and re-check at the end.`, where);
+            } else {
+              push(`In <code>${A} → ${fmt(alt)}</code>: ${tail} ${B}${tail2}. Rule 3: add FOLLOW(${A}). We do not have FOLLOW(${A}) yet. <b>Pause ${B}</b> and solve ${A} first.`, where);
+              compute(A);
+              push(`FOLLOW(${A}) is ready. <b>Go back</b> to ${B}.`, where);
+            }
+          }
+          const add = [...FO[A]]; add.forEach(x => FO[B].add(x));
+          push(`In <code>${A} → ${fmt(alt)}</code>: ${tail} ${B}${tail2}. <b>Rule 3:</b> whatever follows the parent ${A} also follows ${B}. Add FOLLOW(${A}) = ${setStr(FO[A])}.`, Object.assign({ added: [B, add] }, where));
+          break;
+        }
+        const X = alt[j];
+        if (!isNT(G, X)) {
+          FO[B].add(X);
+          push(`In <code>${A} → ${fmt(alt)}</code>: right after ${j === p + 1 ? B : 'that'} comes <code>${X}</code>, a <b>terminal</b>. <b>Add ${X}</b>. Stop.`, Object.assign({ added: [B, [X]] }, where));
+          break;
+        }
+        const add = [...F[X]].filter(x => x !== EPS); add.forEach(x => FO[B].add(x));
+        if (!F[X].has(EPS)) {
+          push(`In <code>${A} → ${fmt(alt)}</code>: right after ${j === p + 1 ? B : 'that'} comes <code>${X}</code>, a <b>non-terminal</b>. <b>Rule 2:</b> add FIRST(${X}) without ε = ${setStr(add)}. ${X} cannot be empty, so stop.`, Object.assign({ added: [B, add] }, where));
+          break;
+        }
+        push(`In <code>${A} → ${fmt(alt)}</code>: right after ${j === p + 1 ? B : 'that'} comes <code>${X}</code>. Add FIRST(${X}) without ε = ${setStr(add)}. But ${X} <b>can be empty</b> (ε in FIRST(${X})). So look one more symbol to the right.`, Object.assign({ added: [B, add] }, where));
+      }
+    }
+    state[B] = 'done';
+    push(`<b>FOLLOW(${B}) = ${setStr(FO[B])}</b> is complete.`, { focus: B, complete: B });
+  }
+  for (const A of G.order) if (state[A] !== 'done') compute(A);
+  const real = computeFollow(G, F);
+  for (const A of G.order) {
+    const miss = [...real[A]].filter(x => !FO[A].has(x));
+    if (miss.length) {
+      miss.forEach(x => FO[A].add(x));
+      push(`<b>Re-check.</b> FOLLOW(${A}) borrowed a set that grew later. Add the missing ${setStr(miss)}.`, { focus: A, added: [A, miss] });
+    }
+  }
+  push(`All FOLLOW sets are complete. Check: FOLLOW never contains ε, and the start symbol has $.`, { final: true });
+  return steps;
+}
+
+/* ---------- LL(1) table, step by step ---------- */
+function tableSteps(G) {
+  const F = computeFirst(G), FO = computeFollow(G, F), M = {}, steps = [];
+  const cols = [...G.terms, '$'];
+  const key = (A, a) => A + '\u0000' + a;
+  const snapM = () => { const o = {}; for (const k in M) o[k] = M[k].map(e => Object.assign({}, e)); return o; };
+  const push = (msg, extra = {}) => steps.push(Object.assign({ msg, M: snapM(), cols, F, FO }, extra));
+  let conflicts = [];
+  push(`Draw the table. <b>Rows</b> = non-terminals (${G.order.join(', ')}). <b>Columns</b> = terminals + $ (${cols.join(' ')}). ε is <b>never</b> a column. We fill it rule by rule.`, {});
+  for (const r of G.numbered) {
+    const f = firstOfSeq(G, r.rhs, F);
+    const firsts = [...f].filter(x => x !== EPS);
+    const how = !r.rhs.length ? `The right side is ε, so FIRST(ε) = { ε }.`
+      : `FIRST(${fmt(r.rhs)}) = ${setStr(f)}.`;
+    push(`<b>Rule ${r.n}: <code>${r.lhs} → ${fmt(r.rhs)}</code>.</b> ${how}`, { rule: r.n });
+    const put = (a, via) => {
+      const k = key(r.lhs, a);
+      M[k] = M[k] || [];
+      M[k].push({ n: r.n, lhs: r.lhs, rhs: r.rhs, via });
+      const c = M[k].length > 1;
+      if (c) conflicts.push([r.lhs, a, M[k].map(e => e.n)]);
+      push(c ? `Put rule ${r.n} in <b>M[${r.lhs}, ${a}]</b>. <b class="bad">Conflict!</b> This cell already has rule ${M[k][0].n}. Two rules in one cell means the parser cannot choose.`
+        : `${via === 'first' ? `${a} is in FIRST` : `${a} is in FOLLOW(${r.lhs})`} → put rule ${r.n} in <b>M[${r.lhs}, ${a}]</b>.`, { rule: r.n, cell: [r.lhs, a], conflict: c });
+    };
+    firsts.forEach(a => put(a, 'first'));
+    if (f.has(EPS)) {
+      push(`ε is in FIRST(${fmt(r.rhs)}): this rule can make ${r.lhs} disappear. So use <b>FOLLOW(${r.lhs}) = ${setStr(FO[r.lhs])}</b> for the columns.`, { rule: r.n });
+      [...FO[r.lhs]].forEach(a => put(a, 'follow'));
+    }
+  }
+  push(`Every empty cell means <b>error</b>. (You can write "error" or leave it blank.)`, { blanks: true });
+  if (!conflicts.length) push(`<b>No cell has more than one rule ∴ the grammar is LL(1).</b>`, { final: true, ok: true });
+  else {
+    const c = conflicts[0], cell = M[key(c[0], c[1])];
+    const type = cell.some(e => e.via === 'follow') ? 'FIRST/FOLLOW' : 'FIRST/FIRST';
+    push(`<b class="bad">Cell M[${c[0]}, ${c[1]}] has rules ${c[2].join(' and ')} ∴ the grammar is NOT LL(1)</b> (${type} conflict).`, { final: true, ok: false, cell: [c[0], c[1]], conflict: true });
+  }
+  return steps;
+}
+
+function buildTable(G) {
+  const F = computeFirst(G), FO = computeFollow(G, F), M = {};
+  for (const r of G.numbered) {
+    const f = firstOfSeq(G, r.rhs, F);
+    const keys = [...f].filter(x => x !== EPS);
+    if (f.has(EPS)) keys.push(...FO[r.lhs]);
+    for (const a of keys) (M[r.lhs + '\u0000' + a] = M[r.lhs + '\u0000' + a] || []).push(r);
+  }
+  return { F, FO, M };
+}
+
+/* ---------- LL(1) parse, step by step (stack, buffer, tree) ---------- */
+function parseSteps(G, input) {
+  const { M } = buildTable(G);
+  const toks = input.trim().split(/\s+/).filter(Boolean);
+  const buf = [...toks, '$'];
+  const cells = []; let popN = 0;
+  const nodes = [];
+  const mk = (label, parent) => { const id = nodes.length; nodes.push({ id, label, parent, kids: [], born: null, matched: false }); if (parent != null) nodes[parent].kids.push(id); return id; };
+  const stack = []; // {sym, cell, node}
+  const steps = [];
+  let sn = 0;
+  const push = (msg, extra = {}) => steps.push(Object.assign({
+    msg, stack: stack.map(s => s.sym), la: i, buf, cells: cells.map(c => Object.assign({}, c)),
+    nodes: nodes.map(n => Object.assign({}, n, { kids: [...n.kids] })), n: sn
+  }, extra));
+  let i = 0;
+  const pushSym = (sym, node) => { const cell = cells.length; cells.push({ sym, pop: null, born: sn }); stack.push({ sym, cell, node }); };
+  push(`Write the input in the <b>buffer</b> and add <b>$</b> at the end: <code>${buf.join(' ')}</code>. The <b>LA</b> (look-ahead) arrow points at the first token, <code>${buf[0]}</code>.`, { phase: 'setup' });
+  sn++; pushSym('$', null);
+  push(`<b>Push $</b> on the stack first. $ marks the bottom of the stack.`, { phase: 'setup' });
+  sn++; const root = mk(G.start, null); nodes[root].born = sn; pushSym(G.start, root);
+  push(`<b>Push the start symbol ${G.start}</b>. The top of the stack is the <b>right end</b>. ${G.start} is also the root of the parse tree.`, { phase: 'setup' });
+  let guard = 0;
+  while (guard++ < 500) {
+    const top = stack[stack.length - 1], a = buf[i];
+    sn++;
+    if (top.sym === '$' && a === '$') {
+      cells[top.cell].pop = ++popN;
+      push(`Top = <b>$</b> and LA = <b>$</b>. Both are at the end at the same time. <b>Accept.</b> The string is syntactically correct.`, { accept: true, act: 'accept' });
+      return { steps, ok: true };
+    }
+    if (!isNT(G, top.sym)) {
+      if (top.sym === a) {
+        stack.pop(); cells[top.cell].pop = ++popN; if (top.node != null) nodes[top.node].matched = true;
+        i++;
+        push(`Top = <code>${a}</code> is a <b>terminal</b> and it equals LA = <code>${a}</code>. <b>Match:</b> pop it and move LA to <code>${buf[i]}</code>.`, { act: 'match', tok: a });
+        continue;
+      }
+      if (top.sym === '$') {
+        push(`The stack is down to <b>$</b> (nothing left to match), but the input still has <code>${a}</code>. <b class="bad">Error.</b> Extra input: the string is NOT accepted.`, { error: true, act: 'error' });
+        return { steps, ok: false };
+      }
+      push(`Top = <code>${top.sym}</code> is a terminal, but LA = <code>${a}</code>. They are <b>different</b>. <b class="bad">Error.</b> The parser stops: the string is NOT accepted.`, { error: true, act: 'error' });
+      return { steps, ok: false };
+    }
+    const rs = M[top.sym + '\u0000' + a];
+    if (!rs || !rs.length) {
+      const why = (a !== '$' && !G.terms.includes(a)) ? ` (<code>${a}</code> is not even a terminal of this grammar)` : '';
+      push(`Top = <code>${top.sym}</code>, LA = <code>${a}</code>. Look up <b>M[${top.sym}, ${a}]</b>: it is <b>empty</b>${why}. <b class="bad">Error.</b> The string is NOT accepted.`, { error: true, act: 'error', look: [top.sym, a] });
+      return { steps, ok: false };
+    }
+    const r = rs[0];
+    stack.pop(); cells[top.cell].pop = ++popN; cells[top.cell].rule = `${top.sym} → ${fmt(r.rhs)}`;
+    const kids = r.rhs.length ? r.rhs.map(s => mk(s, top.node)) : [mk(EPS, top.node)];
+    kids.forEach(k => nodes[k].born = sn);
+    if (!r.rhs.length) {
+      push(`Top = <code>${top.sym}</code> (non-terminal), LA = <code>${a}</code>. M[${top.sym}, ${a}] = <b>${top.sym} → ε</b>. Pop ${top.sym} and push <b>nothing</b> (ε means empty). LA stays at <code>${a}</code>.`, { act: 'expand', rule: r.n, look: [top.sym, a], ruleTxt: `${top.sym} → ε` });
+    } else {
+      for (let k = r.rhs.length - 1; k >= 0; k--) pushSym(r.rhs[k], kids[k]);
+      push(`Top = <code>${top.sym}</code> (non-terminal), LA = <code>${a}</code>. M[${top.sym}, ${a}] = <b>${top.sym} → ${fmt(r.rhs)}</b>. Pop ${top.sym}. Push the right side <b>reversed</b> (${[...r.rhs].reverse().join(', ')}), so <code>${r.rhs[0]}</code> ends on top.`, { act: 'expand', rule: r.n, look: [top.sym, a], ruleTxt: `${top.sym} → ${fmt(r.rhs)}` });
+    }
+  }
+  return { steps, ok: false };
+}
+
+/* ---------- Left factoring (NDG -> DG), step by step ---------- */
+function cloneRules(R) { const o = {}; for (const k in R) o[k] = R[k].map(a => [...a]); return o; }
+function primeName(base, used) { let n = base + "'"; while (used.includes(n)) n += "'"; return n; }
+
+function leftFactorSteps(G) {
+  let order = [...G.order], R = cloneRules(G.rules);
+  const steps = [];
+  const push = (msg, extra = {}) => steps.push(Object.assign({ msg, order: [...order], R: cloneRules(R) }, extra));
+  push(`Start. A grammar is <b>non-deterministic</b> when two alternatives of the same non-terminal start with the same symbol. The parser then cannot choose with one look-ahead. Check each non-terminal from the top.`);
+  const queue = [...order];
+  while (queue.length) {
+    const A = queue.shift();
+    for (;;) {
+      const groups = new Map();
+      R[A].forEach((alt, i) => { const h = alt.length ? alt[0] : EPS; if (!groups.has(h)) groups.set(h, []); groups.get(h).push(i); });
+      const g = [...groups.entries()].find(([h, ix]) => h !== EPS && ix.length > 1);
+      if (!g) { push(`<code>${A}</code>: no two alternatives start with the same symbol. ${A} is <b>deterministic</b>. Keep it.`, { focus: A }); break; }
+      const ix = g[1], alts = ix.map(k => R[A][k]);
+      let p = 0; while (alts.every(a => p < a.length && a[p] === alts[0][p])) p++;
+      const pre = alts[0].slice(0, p);
+      push(`<code>${A}</code>: alternatives ${alts.map(a => `<code>${fmt(a)}</code>`).join(', ')} all start with <b><code>${pre.join(' ')}</code></b>. This is the common part (the longest prefix they share).`, { focus: A, hl: [A, ix] });
+      const N = primeName(A, order);
+      const suff = alts.map(a => a.slice(p));
+      const newAlts = []; R[A].forEach((alt, k) => { if (k === ix[0]) newAlts.push([...pre, N]); else if (!ix.includes(k)) newAlts.push(alt); });
+      R[A] = newAlts; R[N] = suff;
+      order.splice(order.indexOf(A) + 1 + order.slice(order.indexOf(A) + 1).filter(x => x.startsWith(A + "'")).length, 0, N);
+      push(`Take the common part out <b>once</b>: <code>${A} → ${pre.join(' ')} ${N}</code>. The new non-terminal <code>${N}</code> gets what was left after the prefix: ${suff.map(s => `<code>${fmt(s)}</code>`).join(' | ')}. ${suff.some(s => !s.length) ? 'An alternative that was <b>only</b> the prefix leaves nothing, so it becomes <b>ε</b>.' : ''}`, { focus: A, newNT: N });
+      queue.unshift(N);
+    }
+  }
+  push(`<b>Final result.</b> No non-terminal has two alternatives with the same first symbol. The grammar is now deterministic (DG).`, { final: true });
+  return steps;
+}
+
+/* ---------- Left recursion (LRG -> RRG), step by step ---------- */
+function leftRecSteps(G) {
+  const base = [...G.order];
+  let order = [...G.order], R = cloneRules(G.rules);
+  const steps = [];
+  const push = (msg, extra = {}) => steps.push(Object.assign({ msg, order: [...order], R: cloneRules(R) }, extra));
+  push(`Start. A rule is <b>left recursive</b> when a non-terminal is the first symbol of its own right side: <code>A → A α</code>. Work top to bottom in the order ${base.join(', ')}.`);
+  for (let i = 0; i < base.length; i++) {
+    const Ai = base[i];
+    for (let j = 0; j < i; j++) {
+      const Aj = base[j];
+      if (!R[Ai].some(a => a[0] === Aj)) continue;
+      const before = R[Ai].map(a => [...a]);
+      const hit = before.map((a, k) => a[0] === Aj ? k : -1).filter(k => k >= 0);
+      push(`<code>${Ai}</code> has ${hit.map(k => `<code>${Ai} → ${fmt(before[k])}</code>`).join(', ')}: it starts with <code>${Aj}</code>, a non-terminal we already fixed. Hidden left recursion can come through ${Aj}. So <b>substitute</b> ${Aj}'s current rules in its place.`, { focus: Ai, hl: [Ai, hit] });
+      const out = [];
+      for (const a of R[Ai]) if (a[0] === Aj) for (const b of R[Aj]) out.push([...b, ...a.slice(1)]); else out.push(a);
+      R[Ai] = out;
+      push(`After substitution: <code>${Ai} → ${R[Ai].map(fmt).join(' | ')}</code>.`, { focus: Ai });
+    }
+    const alpha = R[Ai].filter(a => a[0] === Ai).map(a => a.slice(1));
+    const beta = R[Ai].filter(a => a[0] !== Ai);
+    if (!alpha.length) { push(`<code>${Ai}</code> has no direct left recursion (no alternative starts with ${Ai}). Keep it.`, { focus: Ai }); continue; }
+    const hit = R[Ai].map((a, k) => a[0] === Ai ? k : -1).filter(k => k >= 0);
+    push(`<code>${Ai}</code> has <b>direct left recursion</b>. Match the pattern <code>A → A α | β</code>:<br>α (what comes after ${Ai}) = ${alpha.map(a => `<code>${fmt(a)}</code>`).join(', ')}<br>β (alternatives that do NOT start with ${Ai}) = ${beta.map(b => `<code>${fmt(b)}</code>`).join(', ') || '<i>none</i>'}`, { focus: Ai, hl: [Ai, hit] });
+    const N = primeName(Ai, order);
+    R[Ai] = beta.length ? beta.map(b => [...b, N]) : [[N]];
+    R[N] = [...alpha.map(a => [...a, N]), []];
+    order.splice(order.indexOf(Ai) + 1, 0, N);
+    push(`Apply the formula: <code>${Ai} → β ${N}</code> and <code>${N} → α ${N} | ε</code>.<br>So <code>${Ai} → ${R[Ai].map(fmt).join(' | ')}</code><br>and <code>${N} → ${R[N].map(fmt).join(' | ')}</code>.`, { focus: Ai, newNT: N });
+  }
+  push(`<b>Final result.</b> No rule starts with its own non-terminal. The grammar is right recursive (RRG) and makes the same strings.`, { final: true });
+  return steps;
+}
+
+if (typeof module !== 'undefined') module.exports = { parseGrammar, computeFirst, computeFollow, firstSteps, followSteps, tableSteps, parseSteps, leftFactorSteps, leftRecSteps, buildTable, fmt, EPS };
+/* ===== Course data (all grammars verified by tools/verify.py) ===== */
+const GRAMMARS = {
+  notes: `E -> T E'\nE' -> + T E' | ε\nT -> M T'\nT' -> * M T' | ε\nM -> id | ( E )`,
+  quiz2: `D -> T L ;\nT -> int | char\nL -> id L'\nL' -> , id L' | ε`,
+  mid23: `E -> c U V W | X Y E\nU -> c | ε\nV -> d U | ε\nW -> e | ε\nX -> e | ( Y )\nY -> g | ε`,
+  pp1: `S -> a A b\nA -> c B\nB -> d | ε`,
+  pp2: `S -> A B\nA -> a A | ε\nB -> b B | c`,
+  ffConf: `S -> a S | B\nB -> a b B | ε`,
+  foConf: `S -> A a\nA -> a | ε`,
+  notesConf: `S -> a | B\nB -> a B | a`,
+  paperQ2: `S -> a B D h\nB -> c C\nC -> b C | ε\nD -> E F\nE -> g | ε\nF -> f | ε`,
+  drill: `S -> ( L ) | a\nL -> S L'\nL' -> , S L' | ε`,
+  /* conversions */
+  q1lf: `S -> a b c A | a b c B | a b | a b d\nA -> e A | e g f\nB -> g f`,
+  q1lr: `A -> A a | B c | d\nB -> A e | C g h | g f\nC -> C a b | A c e | c d`,
+  midlf: `S -> b a c d S | b a c P | b a Q | b a\nP -> c P | c\nQ -> a Q | a`,
+  midlr: `A -> A % B | B\nB -> B & C | C\nC -> C ^ 0 1 | a b c`,
+  aslf1: `S -> 0 1 1 1 S | 0 1 1 A | 0 1 1 B\nA -> 0 1 A | 0 1 B\nB -> b`,
+  aslf2: `S -> a b a b S | a b A | a b a A\nA -> c c B | c D\nB -> c | c D\nD -> c`,
+  aslr1: `A -> B x | A y | z\nB -> A c | d`,
+  aslr2: `S -> S ? T | S # | T\nT -> T ~ Q | T ~ M | Q H\nQ -> q\nM -> m`,
+  slideslr: `E -> E + T | T\nT -> T * F | F\nF -> ( E ) | id`,
+  ppqlf: `S -> a a b S | a a C | a a b | b\nC -> c C | c`,
+  ppqlr: `P -> P ! Q | Q\nQ -> Q ? r | s t`,
+};
+
+const DERIVS = {
+  assign: { start: 'assign_stmt', nts: ['assign_stmt', 'expr', 'term', 'operator'], mode: 'L',
+    seq: [['assign_stmt', 'id = expr ;'], ['expr', 'expr operator term'], ['expr', 'expr operator term'], ['expr', 'term'], ['term', 'id'], ['operator', '+'], ['term', 'real'], ['operator', '-'], ['term', 'integer']],
+    intro: 'Target string: <code>id = id + real - integer ;</code>. Start with the start symbol <code>assign_stmt</code>. At each step we replace the <b>leftmost</b> non-terminal.' },
+  ambL1: { start: 'E', nts: ['E'], mode: 'L', leafVals: [3, 2, 5],
+    seq: [['E', 'E + E'], ['E', 'id'], ['E', 'E * E'], ['E', 'id'], ['E', 'id']],
+    intro: 'Grammar <code>E → E + E | E * E | id</code>. String <code>id + id * id</code>. <b>LMD 1:</b> choose <code>E → E + E</code> first.',
+    valMsg: v => `Put numbers in: id = 3, 2, 5 (that is 3 + 2 * 5). Evaluate from the bottom: 2 * 5 = 10, then 3 + 10 = <b>${v}</b>. This is the <b>right</b> answer (* first).` },
+  ambL2: { start: 'E', nts: ['E'], mode: 'L', leafVals: [3, 2, 5],
+    seq: [['E', 'E * E'], ['E', 'E + E'], ['E', 'id'], ['E', 'id'], ['E', 'id']],
+    intro: 'Same grammar, same string <code>id + id * id</code>. <b>LMD 2:</b> this time choose <code>E → E * E</code> first.',
+    valMsg: v => `Same numbers 3 + 2 * 5. This tree does the + first: 3 + 2 = 5, then 5 * 5 = <b>${v}</b>. <b class="bad">Wrong answer.</b> Two different trees for one string ∴ the grammar is <b>ambiguous</b>.` },
+  rmdParen: { start: 'E', nts: ['E'], mode: 'R',
+    seq: [['E', 'E + E'], ['E', 'id'], ['E', '( E )'], ['E', 'E * E'], ['E', 'id'], ['E', 'id']],
+    intro: 'Grammar <code>E → E + E | E * E | ( E ) | id</code>. String <code>( id * id ) + id</code>. <b>RMD:</b> always replace the <b>rightmost</b> non-terminal.' },
+  asL: { start: 'S', nts: ['S', 'L'], mode: 'L',
+    seq: [['S', '( L )'], ['L', 'L , S'], ['L', 'S'], ['S', 'a'], ['S', '( L )'], ['L', 'L , S'], ['L', 'S'], ['S', 'a'], ['S', 'a']],
+    intro: 'Assignment 01, Q1(b). Grammar <code>S → ( L ) | a</code>, <code>L → L , S | S</code>. String <code>( a , ( a , a ) )</code>. <b>LMD:</b> leftmost non-terminal first.' },
+  asR: { start: 'S', nts: ['S', 'L'], mode: 'R',
+    seq: [['S', '( L )'], ['L', 'L , S'], ['S', '( L )'], ['L', 'L , S'], ['S', 'a'], ['L', 'S'], ['S', 'a'], ['L', 'S'], ['S', 'a']],
+    intro: 'Same grammar and string. <b>RMD:</b> rightmost non-terminal first. The final tree is the same shape; only the order of steps changes.' },
+  q1a: { start: 'L', nts: ['L'], mode: 'L',
+    seq: [['L', 'L ; L'], ['L', 'id'], ['L', 'L & L'], ['L', 'id'], ['L', 'id']],
+    intro: 'Quiz 01 Q1. <code>L → L ; L | L & L | id</code>. String <code>id ; id & id</code>. <b>LMD 1:</b> start with <code>L → L ; L</code>.' },
+  q1b: { start: 'L', nts: ['L'], mode: 'L',
+    seq: [['L', 'L & L'], ['L', 'L ; L'], ['L', 'id'], ['L', 'id'], ['L', 'id']],
+    intro: '<b>LMD 2:</b> start with <code>L → L & L</code> instead. Same string, different tree.' },
+  fixed: { start: 'E', nts: ['E', 'T', 'F'], mode: 'L', leafVals: [3, 2, 6],
+    seq: [['E', 'E + T'], ['E', 'T'], ['T', 'F'], ['F', 'num'], ['T', 'T * F'], ['T', 'F'], ['F', 'num'], ['F', 'num']],
+    intro: 'Unambiguous grammar from the slides: <code>E → E + T | T</code>, <code>T → T * F | F</code>, <code>F → num</code>. String <code>3 + 2 * 6</code>. Now there is <b>only one</b> way.',
+    valMsg: v => `Evaluate: 2 * 6 = 12, then 3 + 12 = <b>${v}</b>. * is lower in the tree, so it is done first. Correct.` },
+  tdp: { start: 'S', nts: ['S', 'A', 'B'], mode: 'L',
+    seq: [['S', 'a A B e'], ['A', 'A b c'], ['A', 'b'], ['B', 'd']],
+    intro: 'Top-down (slides): <code>S → a A B e</code>, <code>A → A b c | b</code>, <code>B → d</code>. Input <code>abbcde</code>. Build from the root <b>down</b>, leftmost first.' },
+  bup: { start: 'S', nts: ['S', 'A', 'B'], mode: 'R',
+    seq: [['S', 'a A B e'], ['B', 'd'], ['A', 'A b c'], ['A', 'b']],
+    intro: 'Bottom-up uses the <b>reverse of the rightmost derivation</b>. Here is the RMD. Read it from the bottom line up: <code>abbcde</code> is reduced back to <code>S</code>.' },
+  ppA: { start: 'S', nts: ['S'], mode: 'L',
+    seq: [['S', 'S # S'], ['S', 'a'], ['S', 'S & S'], ['S', 'a'], ['S', 'a']],
+    intro: 'Practice Q1. <code>S → S # S | S & S | ( S ) | a</code>. String <code>a # a & a</code>. <b>LMD 1</b>.' },
+  ppB: { start: 'S', nts: ['S'], mode: 'L',
+    seq: [['S', 'S & S'], ['S', 'S # S'], ['S', 'a'], ['S', 'a'], ['S', 'a']],
+    intro: '<b>LMD 2</b> for the same string.' },
+};
+
+/* hand-written steppers: each step {msg, html}; html blocks accumulate */
+const NOTES = {
+  phases: [
+    { msg: 'Source code: <code>result = a + b * 10</code>. For the computer it is only a <b>stream of characters</b>. The compiler reads it left to right.', html: '<div class="phase-box"><b>Source</b><code>result = a + b * 10</code></div>' },
+    { msg: '<b>Phase 1 · Lexical analysis.</b> Group characters into <b>tokens</b>. Variables go into the <b>symbol table</b>. Format: &lt;token-name, attribute-value&gt;.', html: '<div class="phase-box"><b>1 Lexical</b><code>&lt;id,1&gt; &lt;=&gt; &lt;id,2&gt; &lt;+&gt; &lt;id,3&gt; &lt;*&gt; &lt;10&gt;</code><span class="muted">symbol table: 1 = result, 2 = a, 3 = b</span></div>' },
+    { msg: '<b>Phase 2 · Syntax analysis (parser).</b> Check the order of tokens with the grammar. Build a tree. * is deeper than +, so it is done first.', html: '<div class="phase-box"><b>2 Syntax</b><code>= ( id1 , + ( id2 , * ( id3 , 10 ) ) )</code><span class="muted">a syntax tree</span></div>' },
+    { msg: '<b>Phase 3 · Semantic analysis.</b> Check the meaning: types. If result, a, b are float, the integer 10 is converted (coercion).', html: '<div class="phase-box"><b>3 Semantic</b><code>10 → inttofloat(10)</code><span class="muted">type checking</span></div>' },
+    { msg: '<b>Phase 4 · Intermediate code generation.</b> Write simple machine-independent code: <b>three-address code</b> (at most 3 addresses per line).', html: '<div class="phase-box"><b>4 Intermediate</b><code>t1 = inttofloat(10)<br>t2 = id3 * t1<br>t3 = id2 + t2<br>id1 = t3</code></div>' },
+    { msg: '<b>Phase 5 · Code optimization.</b> Make the code shorter or faster. Same result.', html: '<div class="phase-box"><b>5 Optimize</b><code>t1 = id3 * 10.0<br>id1 = id2 + t1</code></div>' },
+    { msg: '<b>Phase 6 · Code generation.</b> Produce the target program (assembly / machine code) with registers.', html: '<div class="phase-box"><b>6 Code gen</b><code>LDF R2, id3<br>MULF R2, R2, #10.0<br>LDF R1, id2<br>ADDF R1, R1, R2<br>STF id1, R1</code></div>' },
+    { msg: 'Phases 1–3 = <b>Analysis</b> (front end: understand the program). Phases 4–6 = <b>Synthesis</b> (back end: build the target program). The symbol table and error handler are used by all phases.', html: '' },
+  ],
+  loop: [
+    { msg: 'Grammar <code>A → A α | β</code>. A top-down parser must replace <code>A</code>. It tries the first alternative, <code>A α</code>.', html: '<code>A</code>' },
+    { msg: 'Now the leftmost symbol is <b>A again</b>. No input was read. Replace it again with <code>A α</code>.', html: '<code>⇒ A α</code>' },
+    { msg: 'Again A is first. No input read.', html: '<code>⇒ A α α</code>' },
+    { msg: 'And again... The parser never reads a token. This is the <b>infinite loop</b>. That is why top-down parsers (and LL(1)) cannot use left recursion.', html: '<code>⇒ A α α α ⇒ …  (never ends)</code>' },
+    { msg: 'Fix: the formula. Start with β (the part that does not loop), then repeat α at the <b>right</b> with a new non-terminal A\'.', html: '<div class="final-box">A → β A\'<br>A\' → α A\' | ε</div>' },
+    { msg: 'Check: both grammars make <code>β</code>, <code>β α</code>, <code>β α α</code>, … The language is the same. Only the direction of recursion changed (left → right).', html: '<span class="muted">same strings: β, βα, βαα, …</span>' },
+  ],
+  backtrack: [
+    { msg: 'Recursive descent with <b>backtracking</b> (textbook example). Grammar <code>S → c A d</code>, <code>A → a b | a</code>. Input <code>c a d</code>.', html: '<code>S</code>' },
+    { msg: 'Expand S → c A d. Match <code>c</code> with the input <code>c</code>. Good.', html: '<code>S ⇒ c A d</code> &nbsp; matched: c' },
+    { msg: 'Expand A with its <b>first</b> alternative, <code>A → a b</code>. Match <code>a</code>. Good.', html: '<code>⇒ c a b d</code> &nbsp; matched: c a' },
+    { msg: 'Next we need <code>b</code>, but the input has <code>d</code>. <b>Fail.</b> Go back (backtrack) and undo <code>A → a b</code>.', html: '<code class="bad">b ≠ d → backtrack</code>' },
+    { msg: 'Try the <b>second</b> alternative, <code>A → a</code>. Match <code>a</code>, then match <code>d</code>. Whole input read. <b>Success.</b>', html: '<code>⇒ c a d</code> &nbsp; matched: c a d ✓' },
+    { msg: 'Backtracking works but it is slow (it may try many choices). A <b>predictive</b> parser (LL(1)) never backtracks: it uses 1 look-ahead token and a table to choose correctly the first time.', html: '' },
+  ],
+  ambRecipe: [
+    { msg: 'Notes example: <code>E → E * E | E / E | E + E | E - E | E ^ E | id</code>. Ambiguous: it has no precedence and no associativity.', html: '<code>E → E*E | E/E | E+E | E-E | E^E | id</code>' },
+    { msg: '<b>Step 1: rank the operators</b> from lowest to highest precedence. Lowest: + −. Then * /. Highest: ^. One <b>level</b> (non-terminal) per rank, plus one level for the base.', html: '<span class="muted">levels: E (+ −) → T (* /) → F (^) → G (id)</span>' },
+    { msg: '<b>Step 2: lowest precedence goes at the TOP</b> of the grammar (start symbol). + and − are left associative, so the rule is <b>left recursive</b>: E on the left of the operator.', html: '<code>E → E + T | E − T | T</code>' },
+    { msg: '<b>Step 3:</b> next level. * and / are left associative too.', html: '<code>T → T * F | T / F | F</code>' },
+    { msg: '<b>Step 4:</b> ^ is <b>right</b> associative (2^3^2 = 2^9). So the rule is <b>right recursive</b>: F on the right of the operator.', html: '<code>F → G ^ F | G</code>' },
+    { msg: '<b>Step 5:</b> the bottom level holds the operands (highest precedence = lowest in the tree).', html: '<code>G → id</code>' },
+    { msg: '<b>Final.</b> Each level also has a "pass-down" alternative (E → T, T → F, F → G) so a level can be skipped. Now each string has exactly one parse tree.', html: '<div class="final-box">E → E + T | E − T | T<br>T → T * F | T / F | F<br>F → G ^ F | G<br>G → id</div>' },
+  ],
+  quiz1amb: [
+    { msg: 'Question (Quiz 01, 7 marks): <code>L → L ; L | L & L | id</code>. Is it ambiguous? Find a string and convert.', html: '' },
+    { msg: 'Step 1: write the answer first: <b>"Yes, the grammar is ambiguous."</b>', html: '<p>Yes, the grammar is ambiguous.</p>' },
+    { msg: 'Step 2: pick a short string with <b>two different operators</b>: <code>id ; id & id</code>. Draw two LMD parse trees (see the two steppers above).', html: '<p>String: <b>id ; id & id</b> &nbsp;(LMD 1 and LMD 2 trees)</p>' },
+    { msg: 'Step 3: write the reason in one sentence. Use the faculty wording.', html: '<p>Since for the string id ; id & id there exists more than one leftmost derivation parse tree, the grammar is ambiguous.</p>' },
+    { msg: 'Step 4: state your <b>assumption</b> in brackets. The question gives no precedence, so you choose. Faculty: "&amp; has higher precedence than ; and both operators are left associative."', html: '<p class="muted">[Assuming & has higher precedence than ; and both operators are left associative]</p>' },
+    { msg: 'Step 5: lowest precedence (;) at the top, left recursive. Then &, left recursive. Then the base id.', html: '<div class="final-box">L → L ; M | M<br>M → M & T | T<br>T → id</div>' },
+    { msg: 'The faculty also accepted the other choice (; higher than &). Either is fine <b>if you write the assumption</b>.', html: '<div class="final-box">Alt ans [; higher than &]:<br>L → L & M | M<br>M → M ; T | T<br>T → id</div>' },
+  ],
+  ppq1: [
+    { msg: 'Yes, the grammar is ambiguous.', html: '<p>Yes, the grammar is ambiguous.</p>' },
+    { msg: 'String with two operators: <code>a # a & a</code>. It has 2 leftmost derivations (two trees, shown by the steppers above).', html: '<p>LMD 1: S ⇒ S#S ⇒ a#S ⇒ a#S&S ⇒ a#a&S ⇒ a#a&a<br>LMD 2: S ⇒ S&S ⇒ S#S&S ⇒ a#S&S ⇒ a#a&S ⇒ a#a&a</p>' },
+    { msg: 'Reason sentence.', html: '<p>Since for the string a#a&a there exists more than one leftmost derivation parse tree, the grammar is ambiguous.</p>' },
+    { msg: 'Assumption + conversion. Keep <code>( S )</code> and <code>a</code> at the bottom level (brackets have the highest precedence).', html: '<p class="muted">[Assuming & has higher precedence than # and both are left associative]</p><div class="final-box">S → S # T | T<br>T → T & F | F<br>F → ( S ) | a</div>' },
+  ],
+};
+/* ===== Rendering + interactivity ===== */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/* ---------- grammar view ---------- */
+function grammarHTML(order, R, o = {}) {
+  let n = 0;
+  return '<div class="gram">' + order.map(A => {
+    const alts = R[A].map((alt, ai) => {
+      n++;
+      const hlAlt = (o.alt && o.alt[0] === A && o.alt[1] === ai) || (o.hl && o.hl[0] === A && o.hl[1].includes(ai));
+      const syms = alt.length ? alt.map((s, si) => {
+        let c = '';
+        if (o.alt && o.alt[0] === A && o.alt[1] === ai) {
+          if (si === o.sym) c = 'sym-on';
+          else if (o.look != null && si === o.look) c = 'sym-look';
+        }
+        return `<span class="s ${c}">${esc(s)}</span>`;
+      }).join(' ') : `<span class="s eps">ε</span>`;
+      const tag = o.numbered ? `<sup class="rn">${n}</sup>` : '';
+      return `<span class="alt ${hlAlt ? 'alt-on' : ''} ${o.rule === n ? 'alt-on' : ''}">${tag}${syms}</span>`;
+    }).join(' <span class="bar">|</span> ');
+    const cls = [o.focus === A ? 'g-focus' : '', o.newNT === A ? 'g-new' : ''].join(' ');
+    return `<div class="gline ${cls}"><span class="lhs">${esc(A)}</span> <span class="arr">→</span> ${alts}</div>`;
+  }).join('') + '</div>';
+}
+
+function setsHTML(title, order, sets, o = {}) {
+  const rows = order.map(A => {
+    const s = sets[A];
+    const added = o.added && o.added[0] === A ? o.added[1] : [];
+    const items = s ? s.map(x => `<span class="chip ${added.includes(x) ? 'chip-new' : ''}">${esc(x)}</span>`).join(', ') : '<span class="muted">not yet</span>';
+    const cls = [o.focus === A ? 'row-focus' : '', o.complete === A ? 'row-done' : ''].join(' ');
+    return `<tr class="${cls}"><th>${title}(${esc(A)})</th><td>${s ? '{ ' + items + ' }' : items}</td></tr>`;
+  }).join('');
+  return `<table class="sets"><tbody>${rows}</tbody></table>`;
+}
+
+function ffTable(order, F, FO) {
+  const f = x => '{ ' + [...x].join(', ') + ' }';
+  return `<div class="tscroll"><table class="ff"><thead><tr><th>Non-terminal</th><th>FIRST()</th><th>FOLLOW()</th></tr></thead><tbody>${order.map(A => `<tr><th>${esc(A)}</th><td>${esc(f(F[A]))}</td><td>${esc(f(FO[A]))}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+function ll1TableHTML(order, cols, M, o = {}) {
+  const head = `<tr><th></th>${cols.map(c => `<th>${esc(c)}</th>`).join('')}</tr>`;
+  const body = order.map(A => `<tr><th>${esc(A)}</th>${cols.map(a => {
+    const e = M[A + '\u0000' + a] || [];
+    const on = o.cell && o.cell[0] === A && o.cell[1] === a;
+    const cls = [on ? (o.conflict ? 'cell-bad' : 'cell-on') : '', e.length > 1 ? 'cell-bad' : '', o.look && o.look[0] === A && o.look[1] === a ? 'cell-look' : ''].join(' ');
+    const txt = e.length ? e.map(r => `<span class="tr">${esc(r.lhs)}→${esc(r.rhs.length ? r.rhs.join(' ') : 'ε')}</span>`).join('') : (o.blanks ? '<span class="err">error</span>' : '');
+    return `<td class="${cls}">${txt}</td>`;
+  }).join('')}</tr>`).join('');
+  return `<div class="tscroll"><table class="ll1">${head}${body}</table></div>`;
+}
+
+/* ---------- tree ---------- */
+function treeSVG(nodes, cur, opts = {}) {
+  if (!nodes.length) return '';
+  const root = nodes.find(n => n.parent == null);
+  let leaf = 0; const pos = {};
+  (function lay(id, d) {
+    const n = nodes[id];
+    if (!n.kids.length) pos[id] = { x: leaf++, y: d };
+    else { n.kids.forEach(k => lay(k, d + 1)); pos[id] = { x: (pos[n.kids[0]].x + pos[n.kids[n.kids.length - 1]].x) / 2, y: d }; }
+  })(root.id, 0);
+  const W = 46, H = 50, maxY = Math.max(...Object.values(pos).map(p => p.y));
+  const w = Math.max(leaf * W, 120), h = (maxY + 1) * H + 10;
+  let s = `<svg class="tree" viewBox="${-W / 2} -18 ${w} ${h}" style="max-width:${Math.min(w * 1.15, 860)}px">`;
+  for (const n of nodes) if (n.parent != null) {
+    const a = pos[n.parent], b = pos[n.id];
+    s += `<line x1="${a.x * W}" y1="${a.y * H + 8}" x2="${b.x * W}" y2="${b.y * H - 12}" class="edge ${n.born === cur ? 'edge-new' : ''}"/>`;
+  }
+  for (const n of nodes) {
+    const p = pos[n.id], nt = opts.nts ? opts.nts.has(n.label) : /^[A-Z]/.test(n.label);
+    const cls = [n.born === cur ? 'n-new' : '', nt ? 'n-nt' : (n.label === 'ε' ? 'n-eps' : 'n-t'), n.matched ? 'n-match' : '', opts.val && n.val != null ? '' : ''].join(' ');
+    s += `<text x="${p.x * W}" y="${p.y * H}" class="node ${cls}">${esc(n.label)}</text>`;
+    if (n.val != null) s += `<text x="${p.x * W + 14}" y="${p.y * H - 10}" class="nval">${n.val}</text>`;
+  }
+  return s + '</svg>';
+}
+
+/* ---------- parse view ---------- */
+function parseHTML(G, st, tbl) {
+  const buf = st.buf.map((t, i) => `<span class="tok ${i < st.la ? 'tok-used' : ''} ${i === st.la ? 'tok-la' : ''}">${esc(t)}</span>`).join('');
+  const stack = st.stack.map((s, i) => `<span class="cell ${i === st.stack.length - 1 ? 'cell-top' : ''}">${esc(s)}</span>`).join('');
+  const hist = st.cells.map(c => `<span class="hc ${c.pop ? 'hc-pop' : ''} ${c.born === st.n ? 'hc-new' : ''}"><span class="hs">${esc(c.sym)}</span><span class="hn">${c.pop || ''}</span>${c.rule ? `<span class="hr">${esc(c.rule)}</span>` : ''}</span>`).join('');
+  return `
+  <div class="pv">
+    <div class="lbl">Buffer (input) &nbsp;<span class="muted">LA = look-ahead</span></div><div class="buf">${buf}</div>
+    <div class="lbl">Stack now &nbsp;<span class="muted">bottom ← → top</span></div><div class="stk">${stack || '<span class="muted">empty</span>'}</div>
+    <div class="lbl">Exam-style stack &nbsp;<span class="muted">every push, in order. Number = pop order. Rule = what replaced it.</span></div><div class="hist">${hist}</div>
+    <details class="mini" ${st.look ? 'open' : ''}><summary>LL(1) table${st.look ? ` &mdash; looking at M[${esc(st.look[0])}, ${esc(st.look[1])}]` : ''}</summary>${ll1TableHTML(G.order, [...G.terms, '$'], tbl, { look: st.look })}</details>
+    <div class="lbl">Parse tree (grows as rules are used)</div>${treeSVG(st.nodes, st.n, { nts: G.nts })}
+  </div>`;
+}
+
+/* ---------- Stepper ---------- */
+let activeStepper = null;
+class Stepper {
+  constructor(el, steps, render, opts = {}) {
+    this.el = el; this.steps = steps; this.render = render; this.i = 0;
+    el.classList.add('stepper');
+    el.innerHTML = `
+      <div class="st-sticky">
+      <div class="st-head"><span class="st-title">${opts.title || ''}</span><span class="st-count"></span></div>
+      <div class="st-bar"><i></i></div>
+      <div class="st-msg" aria-live="polite"></div>
+      <div class="st-ctl">
+        <button class="b-reset" title="Start again">⟲ Reset</button>
+        <button class="b-back">← Back</button>
+        <button class="b-next primary">Next →</button>
+        <button class="b-end" title="Jump to the end">End ⇥</button>
+      </div>
+      </div>
+      <div class="st-view"></div>`;
+    $('.b-next', el).onclick = () => this.go(this.i + 1);
+    $('.b-back', el).onclick = () => this.go(this.i - 1);
+    $('.b-reset', el).onclick = () => this.go(0);
+    $('.b-end', el).onclick = () => this.go(this.steps.length - 1);
+    el.addEventListener('pointerdown', () => { activeStepper = this; });
+    this.go(0);
+  }
+  go(i) {
+    if (!this.steps.length) return;
+    this.i = Math.max(0, Math.min(this.steps.length - 1, i));
+    activeStepper = this;
+    const st = this.steps[this.i];
+    $('.st-count', this.el).textContent = `Step ${this.i + 1} / ${this.steps.length}`;
+    $('.st-bar i', this.el).style.width = ((this.i + 1) / this.steps.length * 100) + '%';
+    const m = $('.st-msg', this.el);
+    m.innerHTML = (st.phase ? `<span class="phase">${st.phase}</span>` : '') + st.msg;
+    m.className = 'st-msg' + (st.error || st.ok === false ? ' msg-bad' : '') + (st.accept || st.ok || st.final ? ' msg-good' : '');
+    $('.st-view', this.el).innerHTML = this.render(st, this.i);
+    $('.b-back', this.el).disabled = this.i === 0;
+    $('.b-next', this.el).disabled = this.i === this.steps.length - 1;
+  }
+}
+document.addEventListener('keydown', e => {
+  if (!activeStepper || /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
+  if (e.key === 'ArrowRight') { activeStepper.go(activeStepper.i + 1); e.preventDefault(); }
+  if (e.key === 'ArrowLeft') { activeStepper.go(activeStepper.i - 1); e.preventDefault(); }
+});
+
+/* ---------- step builders per kind ---------- */
+function buildLL1(G, kind, input) {
+  const { F, FO, M } = buildTable(G);
+  const parts = [];
+  const tag = (arr, p) => arr.map(s => Object.assign({}, s, { phase: p }));
+  if (kind === 'first' || kind === 'full') parts.push(...tag(firstSteps(G), kind === 'full' ? '1 · FIRST' : ''));
+  if (kind === 'follow' || kind === 'full') parts.push(...tag(followSteps(G), kind === 'full' ? '2 · FOLLOW' : ''));
+  if (kind === 'table' || kind === 'full') parts.push(...tag(tableSteps(G), kind === 'full' ? '3 · TABLE' : ''));
+  if ((kind === 'parse' || kind === 'full') && input) parts.push(...tag(parseSteps(G, input).steps.map(s => Object.assign(s, { isParse: true })), kind === 'full' ? '4 · PARSE' : ''));
+  const render = st => {
+    if (st.isParse) return parseHTML(G, st, M);
+    if (st.M) return grammarHTML(G.order, G.rules, { numbered: true, rule: st.rule }) + ll1TableHTML(G.order, st.cols, st.M, st);
+    if (st.first) return grammarHTML(G.order, G.rules, st) + `<div class="two"><div><div class="lbl">FIRST (done earlier)</div>${setsHTML('FIRST', G.order, snapAll(F))}</div><div><div class="lbl">FOLLOW (building)</div>${setsHTML('FOLLOW', G.order, st.sets, st)}</div></div>`;
+    return grammarHTML(G.order, G.rules, st) + `<div class="lbl">FIRST sets (building)</div>` + setsHTML('FIRST', G.order, st.sets, st);
+  };
+  return { steps: parts, render };
+}
+const snapAll = F => { const o = {}; for (const k in F) o[k] = [...F[k]]; return o; };
+
+function buildConv(G, kind) {
+  const steps = kind === 'lf' ? leftFactorSteps(G) : leftRecSteps(G);
+  return { steps, render: st => grammarHTML(st.order, st.R, st) + (st.final ? `<div class="final-box">${st.order.map(A => `${esc(A)} → ${esc(st.R[A].map(fmt).join(' | '))}`).join('<br>')}</div>` : '') };
+}
+
+/* derivation spec: {start, nts, mode:'L'|'R', seq:[[lhs, rhs]], notes?:[], vals?:{}} */
+function derivSteps(spec) {
+  const nts = new Set(spec.nts);
+  const nodes = []; const mk = (label, parent) => { const id = nodes.length; nodes.push({ id, label, parent, kids: [], born: 0 }); if (parent != null) nodes[parent].kids.push(id); return id; };
+  let form = [{ sym: spec.start, node: mk(spec.start, null) }];
+  const lines = [spec.start];
+  const steps = [{ msg: spec.intro || `Start with the start symbol <code>${spec.start}</code>.`, lines: [...lines], nodes: JSON.parse(JSON.stringify(nodes)), n: 0 }];
+  spec.seq.forEach(([lhs, rhs], k) => {
+    const idxs = form.map((f, i) => nts.has(f.sym) ? i : -1).filter(i => i >= 0);
+    const at = spec.mode === 'R' ? idxs[idxs.length - 1] : idxs[0];
+    if (form[at].sym !== lhs) throw new Error(`deriv: expected ${lhs} got ${form[at].sym}`);
+    const parts = rhs === 'ε' ? [] : rhs.split(' ');
+    const kids = (parts.length ? parts : ['ε']).map(s => mk(s, form[at].node));
+    kids.forEach(id => nodes[id].born = k + 1);
+    form = [...form.slice(0, at), ...parts.map((s, i) => ({ sym: s, node: kids[i] })), ...form.slice(at + 1)];
+    const line = form.map(f => f.sym).join(' ') || 'ε';
+    lines.push(line);
+    const side = spec.mode === 'R' ? 'rightmost' : 'leftmost';
+    const def = `Expand the <b>${side}</b> non-terminal <code>${lhs}</code> using <code>${lhs} → ${rhs}</code>.`;
+    steps.push({ msg: (spec.notes && spec.notes[k]) || def, lines: [...lines], nodes: JSON.parse(JSON.stringify(nodes)), n: k + 1, at });
+  });
+  if (spec.leafVals) {
+    const nn = JSON.parse(JSON.stringify(nodes)); let li = 0;
+    (function ev(id) { const n = nn[id]; if (!n.kids.length) { n.val = /^(id|num)$/.test(n.label) ? spec.leafVals[li++] : null; return n.val; }
+      const v = n.kids.map(ev); if (n.kids.length === 1) n.val = v[0];
+      else if (n.kids.length === 3) { const op = nn[n.kids[1]].label; if (op === '(') n.val = v[1]; else n.val = op === '+' ? v[0] + v[2] : op === '*' ? v[0] * v[2] : op === '-' ? v[0] - v[2] : op === '/' ? v[0] / v[2] : v[0] ** v[2]; }
+      return n.val; })(0);
+    steps.push({ msg: spec.valMsg ? spec.valMsg(nn[0].val) : `Evaluate the tree from the bottom up. Result = <b>${nn[0].val}</b>.`, lines: [...lines], nodes: nn, n: -1, final: true });
+  }
+  return steps;
+}
+function buildDeriv(spec) {
+  const steps = derivSteps(spec);
+  return { steps, render: st => `<div class="deriv">${st.lines.map((l, i) => `<div class="dl ${i === st.lines.length - 1 ? 'dl-new' : ''}">${i ? '⇒' : '&nbsp;&nbsp;'} ${esc(l)}</div>`).join('')}</div>${treeSVG(st.nodes, st.n, { nts: new Set(spec.nts) })}` };
+}
+
+/* NFA for (a|b)*ab, from the class notes */
+function nfaSteps(str) {
+  const T = { 0: { a: [0, 1], b: [0] }, 1: { b: [2] }, 2: {} };
+  let cur = [0]; const steps = [{ msg: `Start in state <b>0</b>. Input: <code>${esc(str) || '(empty)'}</code>.`, cur: [...cur], i: 0 }];
+  for (let i = 0; i < str.length; i++) {
+    const c = str[i];
+    if (c !== 'a' && c !== 'b') { steps.push({ msg: `<code>${esc(c)}</code> is not in the alphabet {a, b}. <b class="bad">Rejected.</b>`, cur: [], i: i + 1, error: true }); return steps; }
+    const nx = [...new Set(cur.flatMap(s => T[s][c] || []))].sort();
+    steps.push({ msg: `Read <code>${c}</code>. From {${cur.join(', ')}} on <code>${c}</code> we can go to {${nx.join(', ') || 'nowhere'}}.${c === 'a' && cur.includes(0) ? ' From 0, <code>a</code> can stay in 0 <b>or</b> guess "this is the last <code>a</code>" and go to 1.' : ''}`, cur: nx, i: i + 1, ch: c });
+    cur = nx;
+  }
+  const ok = cur.includes(2);
+  steps.push({ msg: ok ? `Input finished in state set {${cur.join(', ')}}. It contains the final state <b>2</b>. <b>Accepted:</b> the string ends in <code>ab</code>.` : `Input finished in {${cur.join(', ') || 'nothing'}}. Final state 2 is not there. <b class="bad">Rejected.</b>`, cur, i: str.length, ok, final: ok, error: !ok });
+  return steps;
+}
+function nfaSVG(cur) {
+  const on = s => cur.includes(s) ? 'st-on' : '';
+  return `<svg class="nfa" viewBox="0 0 340 130">
+  <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" class="ahead"/></marker></defs>
+  <text x="8" y="80" class="lab">start</text><line x1="40" y1="76" x2="66" y2="76" class="arrow" marker-end="url(#ah)"/>
+  <circle cx="90" cy="76" r="22" class="st ${on(0)}"/><text x="90" y="81" class="stl">0</text>
+  <path d="M78,56 C70,22 110,22 102,56" class="arrow" marker-end="url(#ah)"/><text x="90" y="24" class="lab">a, b</text>
+  <line x1="112" y1="76" x2="178" y2="76" class="arrow" marker-end="url(#ah)"/><text x="145" y="68" class="lab">a</text>
+  <circle cx="200" cy="76" r="22" class="st ${on(1)}"/><text x="200" y="81" class="stl">1</text>
+  <line x1="222" y1="76" x2="276" y2="76" class="arrow" marker-end="url(#ah)"/><text x="249" y="68" class="lab">b</text>
+  <circle cx="300" cy="76" r="22" class="st ${on(2)}"/><circle cx="300" cy="76" r="17" class="st2"/><text x="300" y="81" class="stl">2</text>
+  </svg>`;
+}
+
+/* ---------- exam-format final answer (what to write on paper) ---------- */
+function examAnswer(G, input) {
+  const { F, FO, M } = buildTable(G);
+  const cols = [...G.terms, '$'];
+  const rules = G.numbered.map(r => `(${r.n}) ${esc(r.lhs)} → ${esc(fmt(r.rhs))}`).join('&nbsp;&nbsp; ');
+  const conflicts = Object.values(M).filter(v => v.length > 1).length;
+  let h = `<div class="ans"><p class="muted">Rules numbered: ${rules}</p><h5>1. First() and Follow()</h5>${ffTable(G.order, F, FO)}<h5>2. LL(1) Parsing Table</h5>${ll1TableHTML(G.order, cols, M, { blanks: false })}<p>${conflicts ? '<b class="bad">A cell has more than one rule ∴ the grammar is NOT LL(1).</b>' : 'No cell has more than one rule ∴ the grammar is LL(1).'}</p>`;
+  if (input) {
+    const { steps, ok } = parseSteps(G, input); const last = steps[steps.length - 1];
+    const hist = last.cells.map(c => `<span class="hc hc-pop"><span class="hs">${esc(c.sym)}</span><span class="hn">${c.pop || ''}</span>${c.rule ? `<span class="hr">${esc(c.rule)}</span>` : ''}</span>`).join('');
+    const acts = steps.filter(s => s.act).map((s, k) => `${k + 1} ${s.act === 'expand' ? esc(s.ruleTxt) : s.act === 'match' ? 'match ' + esc(s.tok) : s.act === 'accept' ? '$ = $ accept' : 'error'}`).join(' · ');
+    h += `<h5>3. Parsing the string (horizontal stack)</h5><p>Buffer: <code>${esc(input)} $</code> &nbsp; LA ↑ starts at <code>${esc(input.split(' ')[0])}</code></p><div class="hist">${hist}</div>
+      <p class="muted">Non-terminal: pop, push right side reversed. Terminal: match with LA, pop, move LA. Numbers under cells = pop order.</p><p><b>Steps:</b> ${acts}</p>`;
+    if (ok) h += `<h5>4. Parse tree</h5>${treeSVG(last.nodes, -1, { nts: G.nts })}<p class="concl"><b>Conclusion:</b> Stack reaches $ when the buffer reaches $. ∴ The string <code>${esc(input.replace(/ /g, ''))}</code> is accepted. The grammar is LL(1) and the string is syntactically correct.</p>`;
+    else h += `<p class="concl bad"><b>Conclusion:</b> ${last.msg.replace(/<[^>]+>/g, '')} ∴ Parsing is not possible for <code>${esc(input.replace(/ /g, ''))}</code>.</p>`;
+  }
+  return h + '</div>';
+}
+
+/* ---------- mount everything ---------- */
+function mountAll() {
+  for (const el of $$('[data-ll1]')) {
+    const G = parseGrammar(GRAMMARS[el.dataset.g]);
+    const { steps, render } = buildLL1(G, el.dataset.ll1, el.dataset.input);
+    new Stepper(el, steps, render, { title: el.dataset.title });
+  }
+  for (const el of $$('[data-conv]')) {
+    const G = parseGrammar(GRAMMARS[el.dataset.g]);
+    const { steps, render } = buildConv(G, el.dataset.conv);
+    new Stepper(el, steps, render, { title: el.dataset.title });
+  }
+  for (const el of $$('[data-deriv]')) {
+    const { steps, render } = buildDeriv(DERIVS[el.dataset.deriv]);
+    new Stepper(el, steps, render, { title: el.dataset.title });
+  }
+  for (const el of $$('[data-notes]')) {
+    const steps = NOTES[el.dataset.notes];
+    new Stepper(el, steps, (st, i) => `<div class="nview">${steps.slice(0, i + 1).filter(s => s.html).map((s, k, a) => `<div class="nb ${k === a.length - 1 && s === st ? 'nb-new' : ''}">${s.html}</div>`).join('')}</div>`, { title: el.dataset.title });
+  }
+  for (const el of $$('[data-answer]')) el.innerHTML = examAnswer(parseGrammar(GRAMMARS[el.dataset.g]), el.dataset.input);
+  for (const el of $$('[data-tree]')) { const st = derivSteps(DERIVS[el.dataset.tree]); el.innerHTML = treeSVG(st[st.length - 1].nodes, -1, { nts: new Set(DERIVS[el.dataset.tree].nts) }); }
+
+  /* NFA tester */
+  const nf = $('#nfa-run');
+  if (nf) {
+    const host = $('#nfa-stepper');
+    const run = () => { const s = $('#nfa-in').value.trim(); const steps = nfaSteps(s);
+      new Stepper(host, steps, st => nfaSVG(st.cur) + `<div class="buf">${[...s].map((c, i) => `<span class="tok ${i < st.i ? 'tok-used' : ''} ${i === st.i - 1 ? 'tok-la' : ''}">${esc(c)}</span>`).join('')}</div>`, { title: `NFA for (a|b)*ab on "${esc(s)}"` }); };
+    nf.onclick = run; run();
+  }
+
+  /* playground */
+  const pg = $('#pg-run');
+  if (pg) pg.onclick = () => {
+    const out = $('#pg-out'), mode = $('#pg-mode').value;
+    try {
+      const G = parseGrammar($('#pg-g').value);
+      out.innerHTML = '<div id="pg-st"></div>';
+      const host = $('#pg-st');
+      if (mode === 'lf' || mode === 'lr') { const { steps, render } = buildConv(G, mode); new Stepper(host, steps, render, { title: mode === 'lf' ? 'Left factoring (NDG → DG)' : 'Remove left recursion (LRG → RRG)' }); }
+      else {
+        const lr = leftRecursive(G);
+        if (lr.length) { out.innerHTML = `<p class="warnbox">${lr.join(', ')} is left recursive. LL(1) is not possible. Choose "Remove left recursion" first, then paste the result here.</p>`; return; }
+        const { steps, render } = buildLL1(G, 'full', $('#pg-s').value.trim());
+        new Stepper(host, steps, render, { title: 'Full LL(1) solution' });
+        out.insertAdjacentHTML('beforeend', `<details class="ex"><summary>Show the exam-format answer (write this on paper)</summary>${examAnswer(G, $('#pg-s').value.trim())}</details>`);
+      }
+    } catch (e) { out.innerHTML = `<p class="warnbox">${esc(e.message)}</p>`; }
+  };
+  $$('[data-load]').forEach(b => b.onclick = () => { const [g, s, m] = b.dataset.load.split('::'); $('#pg-g').value = GRAMMARS[g]; $('#pg-s').value = s || ''; $('#pg-mode').value = m || 'll1'; $('#pg-run').click(); });
+
+  /* classifiers (True/False and others) */
+  for (const q of $$('.cls')) {
+    const fb = $('.fb', q);
+    $$('button', q).forEach(b => b.onclick = () => {
+      const ok = b.dataset.v === q.dataset.a;
+      $$('button', q).forEach(x => x.classList.remove('ok', 'no'));
+      b.classList.add(ok ? 'ok' : 'no');
+      fb.innerHTML = ok ? `<b>Correct.</b> ${q.dataset.why}` : `Not quite. Try again.`;
+      fb.className = 'fb ' + (ok ? 'fb-ok' : 'fb-no');
+    });
+  }
+
+  /* practice paper scoring */
+  const upd = () => {
+    let tot = 0, max = 0;
+    for (const q of $$('.pq')) {
+      let s = 0, m = 0;
+      $$('input[type=checkbox]', q).forEach(c => { const v = +c.dataset.m; m += v; if (c.checked) s += v; });
+      $('.pq-score', q).textContent = `${s} / ${m}`; tot += s; max += m;
+    }
+    const pct = max ? tot / max * 100 : 0;
+    $('#pp-total').textContent = `${tot} / ${max}`;
+    $('#pp-msg').innerHTML = !tot ? 'Tick the steps you got right to see your result.'
+      : pct >= 80 ? '<b>Ready.</b> Sleep well and repeat the cheat sheet in the morning.'
+      : pct >= 60 ? '<b>Close.</b> Redo the questions where you lost marks, using their steppers.'
+      : '<b>Go back to the lessons:</b> 6 (ambiguity), 7 (left recursion), 8 (left factoring), 12–14 (FIRST, FOLLOW, table, parse).';
+  };
+  $$('.pq input[type=checkbox]').forEach(c => c.onchange = upd); if ($('#pp-total')) upd();
+
+  /* timer */
+  const tEl = $('#pp-time');
+  if (tEl) {
+    let left = 90 * 60, h = null;
+    const show = () => { tEl.textContent = `${String(Math.floor(left / 60)).padStart(2, '0')}:${String(left % 60).padStart(2, '0')}`; tEl.classList.toggle('low', left < 600); };
+    $('#pp-start').onclick = () => { if (h) { clearInterval(h); h = null; $('#pp-start').textContent = 'Resume'; return; } $('#pp-start').textContent = 'Pause'; tEl.parentNode.classList.add('running'); h = setInterval(() => { if (left > 0) left--; show(); if (!left) { clearInterval(h); h = null; } }, 1000); };
+    $('#pp-reset').onclick = () => { clearInterval(h); h = null; left = 90 * 60; tEl.parentNode.classList.remove('running'); $('#pp-start').textContent = 'Start'; show(); };
+    show();
+  }
+
+  /* theme */
+  $('#theme').onclick = () => {
+    const r = document.documentElement, dark = r.dataset.theme ? r.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    r.dataset.theme = dark ? 'light' : 'dark';
+  };
+}
+document.addEventListener('DOMContentLoaded', () => {
+  mountAll();
+  const nav = $('nav.pills');
+  nav.addEventListener('wheel', e => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { nav.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false });
+});
+</script>
+</body>
+</html>
