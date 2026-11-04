@@ -213,3 +213,11 @@ html{scroll-padding-top:16px}
 }
 nav.side{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 nav.side::-webkit-scrollbar{width:6px}nav.side::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}nav.side::-webkit-scrollbar-track{background:transparent}
+
+/* top tabs: stepper / past papers */
+.toptabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.toptabs .tab{font:600 13px var(--sans);text-decoration:none;color:var(--ink);border:1px solid var(--line);background:var(--card);padding:7px 14px;border-radius:4px}
+.toptabs .tab.on{background:var(--soft);color:var(--muted)}
+.toptabs .tab:not(.on){background:var(--teal);color:var(--card);border-color:var(--teal)}
+nav.side a.side-pp{display:block;margin:4px 10px 10px;padding:6px 10px;background:var(--teal);color:var(--card);border-radius:4px;font:600 12px var(--sans);text-decoration:none}
+.mbar .mb-pp{margin-left:auto;font:600 12px var(--sans);color:var(--card);background:var(--teal);padding:4px 10px;border-radius:4px;text-decoration:none}

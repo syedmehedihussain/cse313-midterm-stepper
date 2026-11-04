@@ -221,11 +221,20 @@ html{scroll-padding-top:16px}
 }
 nav.side{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 nav.side::-webkit-scrollbar{width:6px}nav.side::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}nav.side::-webkit-scrollbar-track{background:transparent}
+
+/* top tabs: stepper / past papers */
+.toptabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.toptabs .tab{font:600 13px var(--sans);text-decoration:none;color:var(--ink);border:1px solid var(--line);background:var(--card);padding:7px 14px;border-radius:4px}
+.toptabs .tab.on{background:var(--soft);color:var(--muted)}
+.toptabs .tab:not(.on){background:var(--teal);color:var(--card);border-color:var(--teal)}
+nav.side a.side-pp{display:block;margin:4px 10px 10px;padding:6px 10px;background:var(--teal);color:var(--card);border-radius:4px;font:600 12px var(--sans);text-decoration:none}
+.mbar .mb-pp{margin-left:auto;font:600 12px var(--sans);color:var(--card);background:var(--teal);padding:4px 10px;border-radius:4px;text-decoration:none}
 </style>
 </head>
 <body>
 <nav class="side" id="side" aria-label="Sections">
   <div class="side-h">cse313 · midterm</div>
+  <a class="side-pp" href="papers.html">past papers · solved + pdf</a>
   <a href="#s0"><span class="n">0</span>plan</a>
   <a href="#s1"><span class="n">1</span>compiler</a>
   <a href="#s2"><span class="n">2</span>phases</a>
@@ -249,10 +258,11 @@ nav.side::-webkit-scrollbar{width:6px}nav.side::-webkit-scrollbar-thumb{backgrou
   <a href="#s19"><span class="n">19</span>solver</a>
   <a href="#s20"><span class="n">20</span>cheat sheet</a>
 </nav>
-<div class="mbar"><button id="menu" aria-controls="side" aria-expanded="false">☰ sections</button><span id="cur">0 plan</span></div>
+<div class="mbar"><button id="menu" aria-controls="side" aria-expanded="false">☰ sections</button><span id="cur">0 plan</span><a class="mb-pp" href="papers.html">past papers</a></div>
 <div class="scrim" id="scrim"></div>
 <div class="wrap">
 <header class="top">
+  <div class="toptabs"><a class="tab on" href="index.html">stepper lessons</a><a class="tab" href="papers.html">past papers · solved + pdf</a></div>
   <div class="kicker">cse313 · compiler construction · iub · autumn 2026 · section 1</div>
   <h1>Midterm, step by step</h1>
   <p>Syllabus topics 1–14, taught from zero. Every method has a <b>stepper</b>: press <b>Next</b> (or the → key) and it does <b>one small step</b>, like a debugger. Most text uses short, simple sentences. <span style="background:var(--lav-t);padding:0 4px">Purple boxes</span> hold exact exam wording to memorise.</p>
@@ -1091,7 +1101,7 @@ function parseSteps(G, input) {
       return { steps, ok: false };
     }
     const r = rs[0];
-    stack.pop(); cells[top.cell].pop = ++popN; cells[top.cell].rule = `${top.sym} → ${fmt(r.rhs)}`;
+    stack.pop(); cells[top.cell].pop = ++popN; cells[top.cell].rule = `${top.sym} → ${fmt(r.rhs)}`; cells[top.cell].at = sn;
     const kids = r.rhs.length ? r.rhs.map(s => mk(s, top.node)) : [mk(EPS, top.node)];
     kids.forEach(k => nodes[k].born = sn);
     if (!r.rhs.length) {
@@ -1698,7 +1708,7 @@ document.addEventListener('DOMContentLoaded', () => {
   menu.onclick = () => setOpen(!side.classList.contains('open'));
   scrim.onclick = () => setOpen(false);
   $$('a', side).forEach(a => a.addEventListener('click', () => setOpen(false)));
-  const links = new Map($$('a', side).map(a => [a.getAttribute('href').slice(1), a]));
+  const links = new Map($$('a[href^="#"]', side).map(a => [a.getAttribute('href').slice(1), a]));
   const mark = id => { links.forEach((a, k) => a.classList.toggle('on', k === id)); const a = links.get(id); if (a) { $('#cur').textContent = a.textContent.replace(/^(\d+)/, '$1 '); a.scrollIntoView({ block: 'nearest' }); } };
   const io = new IntersectionObserver(es => { const v = es.filter(e => e.isIntersecting).sort((x, y) => x.boundingClientRect.top - y.boundingClientRect.top)[0]; if (v) mark(v.target.id); }, { rootMargin: '-20% 0px -70% 0px' });
   $$('section.card').forEach(sec => io.observe(sec));

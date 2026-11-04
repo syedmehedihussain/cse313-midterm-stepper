@@ -354,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
   menu.onclick = () => setOpen(!side.classList.contains('open'));
   scrim.onclick = () => setOpen(false);
   $$('a', side).forEach(a => a.addEventListener('click', () => setOpen(false)));
-  const links = new Map($$('a', side).map(a => [a.getAttribute('href').slice(1), a]));
+  const links = new Map($$('a[href^="#"]', side).map(a => [a.getAttribute('href').slice(1), a]));
   const mark = id => { links.forEach((a, k) => a.classList.toggle('on', k === id)); const a = links.get(id); if (a) { $('#cur').textContent = a.textContent.replace(/^(\d+)/, '$1 '); a.scrollIntoView({ block: 'nearest' }); } };
   const io = new IntersectionObserver(es => { const v = es.filter(e => e.isIntersecting).sort((x, y) => x.boundingClientRect.top - y.boundingClientRect.top)[0]; if (v) mark(v.target.id); }, { rootMargin: '-20% 0px -70% 0px' });
   $$('section.card').forEach(sec => io.observe(sec));

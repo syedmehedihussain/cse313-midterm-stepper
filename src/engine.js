@@ -305,7 +305,7 @@ function parseSteps(G, input) {
       return { steps, ok: false };
     }
     const r = rs[0];
-    stack.pop(); cells[top.cell].pop = ++popN; cells[top.cell].rule = `${top.sym} → ${fmt(r.rhs)}`;
+    stack.pop(); cells[top.cell].pop = ++popN; cells[top.cell].rule = `${top.sym} → ${fmt(r.rhs)}`; cells[top.cell].at = sn;
     const kids = r.rhs.length ? r.rhs.map(s => mk(s, top.node)) : [mk(EPS, top.node)];
     kids.forEach(k => nodes[k].born = sn);
     if (!r.rhs.length) {
