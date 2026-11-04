@@ -16,7 +16,7 @@
   <a href="#s13"><span class="n">13</span>table</a>
   <a href="#s14"><span class="n">14</span>parsing</a>
   <a href="#s15"><span class="n">15</span>conflicts</a>
-  <a href="#s16"><span class="n">16</span>past papers</a>
+  <a href="#s16"><span class="n">16</span>autumn-23 mid</a>
   <a href="#s16b"><span class="n">16b</span>summer-23 mid</a>
   <a href="#s17"><span class="n">17</span>practice paper</a>
   <a href="#s18"><span class="n">18</span>true/false</a>
@@ -358,7 +358,17 @@ A' → β₁ | β₂                  (if a βᵢ is empty, write ε)</div>
 </section>
 
 <!-- 16 -->
-<section class="card" id="s16"><span class="tag">worked past papers</span><h2>16 · Past papers, fully solved</h2>
+<section class="card" id="s16"><span class="tag">worked past papers</span><h2>16 · Midterm Autumn 2023 (SET-A), fully solved</h2>
+<p>Autumn-23 SET-A (Ms. Nazma Sarker's course) had a 20-mark mid and a 10-mark quiz on the same paper, 1h30m. Every question is solved here.</p>
+<h3>Mid Autumn-23 Q1 [7]</h3>
+<p>Prove whether the following Grammar is Ambiguous or NOT. If the following grammar is ambiguous, convert it to unambiguous form.</p>
+<div class="formula">E → E@S | S
+S → S#B | B
+B → C~B | C
+C → C?A | E
+A → a</div>
+<div class="stepper-host" data-deriv="aut23" data-title="Aut-23 Q1 · one LMD of ? a # ? a (only one exists)"></div>
+<div class="stepper-host" data-notes="aut23q1" data-title="Aut-23 Q1 · write the answer"></div>
 <h3>Mid Autumn-23 Q2 [8]</h3>
 <p>Write the First() and Follow() of the following Grammar. Draw LL(1) Parsing Table and Parse the string <code>( ) g c c d c e</code> showing all steps. If parsing is not possible, point out the reasons. V = {E, U, V, W, X, Y}, T = {c, d, e, (, ), g, ε}, S = {E}</p>
 <div class="formula">E → cUVW | XYE
@@ -376,7 +386,18 @@ Y → g | ε</div>
 <div class="cls" data-a="F" data-why="FOLLOW sets are computed from where a symbol appears on right sides. Left recursion does not stop this. (Same note as (c).)"><div class="q">(d) From LRG grammar complete Follow set can't be found.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
 <div class="cls" data-a="F" data-why="Brute force = top-down parsing with backtracking."><div class="q">(e) Brute Force Parser is a BUP.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
 <p class="muted">(c) and (d) are not settled by the slides. The answers above are the textbook view, which the computer check agrees with. Always write a one-line reason, so you earn marks either way.</p>
-<h3>Mid Autumn-23 quiz Q1 and Q2</h3><p>Solved step by step in lessons 7 and 8.</p>
+<h3>Autumn-23 Quiz Q1 [5]: NDG → DG</h3>
+<div class="formula">S → bacdS | bacP | baQ | ba
+P → cP | c
+Q → aQ | a</div>
+<div class="stepper-host" data-conv="lf" data-g="midlf" data-title="Aut-23 quiz Q1"></div>
+<div class="key"><b>Final:</b> <code>S → baS'</code> · <code>S' → cS'' | Q | ε</code> · <code>S'' → dS | P</code> · <code>P → cP'</code> · <code>P' → P | ε</code> · <code>Q → aQ'</code> · <code>Q' → Q | ε</code></div>
+<h3>Autumn-23 Quiz Q2 [5]: LRG → RRG</h3>
+<div class="formula">A → A%B | B
+B → B&C | C
+C → C^01 | abc</div>
+<div class="stepper-host" data-conv="lr" data-g="midlr" data-title="Aut-23 quiz Q2"></div>
+<div class="key"><b>Final:</b> <code>A → BA'</code> · <code>A' → %BA' | ε</code> · <code>B → CB'</code> · <code>B' → &CB' | ε</code> · <code>C → abcC'</code> · <code>C' → ^01C' | ε</code></div>
 <h3>Extra LL(1) drill (from Assignment 01's grammar)</h3>
 <p>Assignment Q1 grammar <code>S → (L) | a</code>, <code>L → L, S | S</code> is left recursive. Remove it first: <code>L → S L'</code>, <code>L' → , S L' | ε</code>. Then:</p>
 <div class="stepper-host" data-ll1="full" data-g="drill" data-input="( a , ( a , a ) )" data-title="Drill: parse (a,(a,a))"></div>

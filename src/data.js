@@ -70,6 +70,9 @@ const DERIVS = {
   ppA: { start: 'S', nts: ['S'], mode: 'L',
     seq: [['S', 'S # S'], ['S', 'a'], ['S', 'S & S'], ['S', 'a'], ['S', 'a']],
     intro: 'Practice Q1. <code>S → S # S | S & S | ( S ) | a</code>. String <code>a # a & a</code>. <b>LMD 1</b>.' },
+  aut23: { start: 'E', nts: ['E', 'S', 'B', 'C', 'A'], mode: 'L',
+    seq: [['E', 'S'], ['S', 'S # B'], ['S', 'B'], ['B', 'C'], ['C', 'C ? A'], ['C', 'ε'], ['A', 'a'], ['B', 'C'], ['C', 'C ? A'], ['C', 'ε'], ['A', 'a']],
+    intro: 'Autumn-23 Q1 (reading the last C rule as <code>C → C ? A | ε</code>). String <code>? a # ? a</code>. Watch: at every step only <b>one</b> rule can work.' },
   s23a: { start: 'S', nts: ['S', 'A', 'B', 'C'], mode: 'L',
     seq: [['S', 'A'], ['A', 'B'], ['B', 'B # B'], ['B', 'C'], ['C', 'i'], ['B', 'B # B'], ['B', 'C'], ['C', 'i'], ['B', 'C'], ['C', 'i']],
     intro: 'Summer-23 Q1. String <code>i # i # i</code>. <b>LMD 1:</b> the first <code>B → B # B</code> puts the <b>second</b> # inside its right B.' },
@@ -154,5 +157,12 @@ const NOTES = {
     { msg: '<b>The reason:</b> left factoring only <b>delays</b> the choice. A → αβ₁ | αβ₂ becomes A → αA\', A\' → β₁ | β₂. The parser reads α first, then chooses. The <b>same</b> choices still exist, just later.', html: '<p><b>Reason:</b> left factoring removes common prefixes. It delays the choice between alternatives but does not remove any alternative or any tree.</p>' },
     { msg: '<b>Proof idea (one-to-one mapping).</b> Every derivation step A ⇒ αβᵢ in the old grammar becomes exactly two steps A ⇒ αA\' ⇒ αβᵢ in the new one, and back. So each parse tree maps to exactly one parse tree. The <b>number</b> of trees for every string stays the same.', html: '<p><b>Proof:</b> each use of A → αβᵢ ↔ A → αA\' then A\' → βᵢ (one-to-one). So every string keeps the same number of parse trees. If a string had 2 trees before, it has 2 trees after.</p>' },
     { msg: '<b>Conclusion.</b> Ambiguity comes from missing precedence/associativity (the X → X op X shape), not from common prefixes. Determinism and ambiguity are different properties.', html: '<p class="concl"><b>∴ Yes, it can be proved: "Determinism does not change ambiguity of a grammar."</b> To remove ambiguity you must restructure the grammar with precedence levels (lesson 6). Note: an ambiguous grammar can never be LL(1), even after left factoring.</p>' },
+  ],
+  aut23q1: [
+    { msg: 'Read the grammar level by level. Each level has <b>one</b> operator: @ in E, # in S, ~ in B, ? in C.', html: '<div class="formula">E → E @ S | S\nS → S # B | B\nB → C ~ B | C\nC → C ? A | E   (printed)\nA → a</div>' },
+    { msg: 'Check the printed last rule <code>C → C ? A | E</code>. C can only become <code>C ? A</code> (needs another C) or <code>E</code> (goes back up to the top). There is no way to finish with only terminals. So the grammar as printed makes <b>no strings at all</b>. It must be a typo for ε. Write this assumption.', html: '<p class="muted">[Assuming the last rule is C → C ? A | ε, because with E the grammar generates no terminal string]</p>' },
+    { msg: 'Look for the ambiguity pattern <code>X → X op X</code> (the same non-terminal on <b>both</b> sides of an operator). E → E @ S: left side only. S → S # B: left only. B → C ~ B: right only. C → C ? A: left only. <b>None</b> has it.', html: '<p>No rule has the form X → X op X. Each rule recurses on one side only.</p>' },
+    { msg: 'Each operator lives on exactly <b>one</b> level, so its precedence is fixed. Each rule recurses on one side, so its associativity is fixed. So for every string there is only one way to build the tree. (The stepper above shows one example: only one rule fits at each step.)', html: '<p>Each operator appears in exactly one rule at one level ∴ its precedence and associativity are fixed ∴ every string has exactly one leftmost derivation.</p>' },
+    { msg: 'Write the conclusion. Add the precedence table: it shows you understood the structure, and the question gives 7 marks.', html: '<p class="concl"><b>∴ The grammar is NOT ambiguous.</b> No conversion is needed.</p><div class="tscroll"><table><thead><tr><th>Operator</th><th>Precedence</th><th>Associativity</th></tr></thead><tbody><tr><td>@</td><td>1 (lowest)</td><td>left (E → E @ S)</td></tr><tr><td>#</td><td>2</td><td>left (S → S # B)</td></tr><tr><td>~</td><td>3</td><td>right (B → C ~ B)</td></tr><tr><td>?</td><td>4 (highest)</td><td>left (C → C ? A)</td></tr></tbody></table></div>' },
   ],
 };
