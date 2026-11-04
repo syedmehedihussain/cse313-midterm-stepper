@@ -22,6 +22,12 @@ const GRAMMARS = {
   slideslr: `E -> E + T | T\nT -> T * F | F\nF -> ( E ) | id`,
   ppqlf: `S -> a a b S | a a C | a a b | b\nC -> c C | c`,
   ppqlr: `P -> P ! Q | Q\nQ -> Q ? r | s t`,
+  /* Midterm Summer 2023 */
+  s23fix: `S -> A @ S | A\nA -> A & B | B\nB -> B # D | D\nD -> D ~ C | C\nC -> i`,
+  s23rr: `S -> A @ S | A\nA -> B A'\nA' -> & B A' | ε\nB -> D B'\nB' -> # D B' | ε\nD -> C D'\nD' -> ~ C D' | ε\nC -> i`,
+  s23det: `S -> A S'\nS' -> @ S | ε\nA -> B A'\nA' -> & B A' | ε\nB -> D B'\nB' -> # D B' | ε\nD -> C D'\nD' -> ~ C D' | ε\nC -> i`,
+  s23q2: `S -> ( ( b | ε`,
+  s23q2alt: `S -> ( ( S | ε`,
 };
 
 const DERIVS = {
@@ -64,6 +70,18 @@ const DERIVS = {
   ppA: { start: 'S', nts: ['S'], mode: 'L',
     seq: [['S', 'S # S'], ['S', 'a'], ['S', 'S & S'], ['S', 'a'], ['S', 'a']],
     intro: 'Practice Q1. <code>S → S # S | S & S | ( S ) | a</code>. String <code>a # a & a</code>. <b>LMD 1</b>.' },
+  s23a: { start: 'S', nts: ['S', 'A', 'B', 'C'], mode: 'L',
+    seq: [['S', 'A'], ['A', 'B'], ['B', 'B # B'], ['B', 'C'], ['C', 'i'], ['B', 'B # B'], ['B', 'C'], ['C', 'i'], ['B', 'C'], ['C', 'i']],
+    intro: 'Summer-23 Q1. String <code>i # i # i</code>. <b>LMD 1:</b> the first <code>B → B # B</code> puts the <b>second</b> # inside its right B.' },
+  s23b: { start: 'S', nts: ['S', 'A', 'B', 'C'], mode: 'L',
+    seq: [['S', 'A'], ['A', 'B'], ['B', 'B # B'], ['B', 'B # B'], ['B', 'C'], ['C', 'i'], ['B', 'C'], ['C', 'i'], ['B', 'C'], ['C', 'i']],
+    intro: '<b>LMD 2:</b> same string, but now the second <code>B → B # B</code> expands the <b>left</b> B. Different tree.' },
+  s23f1: { start: 'E', nts: ['E', "E'"], mode: 'L',
+    seq: [['E', "E E'"], ['E', 'id'], ["E'", '+ E'], ['E', "E E'"], ['E', 'id'], ["E'", '* E'], ['E', 'id']],
+    intro: 'After left factoring: <code>E → E E\' | id</code>, <code>E\' → + E | * E</code>. String <code>id + id * id</code>. <b>LMD 1</b> (the * is inside the + part).' },
+  s23f2: { start: 'E', nts: ['E', "E'"], mode: 'L',
+    seq: [['E', "E E'"], ['E', "E E'"], ['E', 'id'], ["E'", '+ E'], ['E', 'id'], ["E'", '* E'], ['E', 'id']],
+    intro: '<b>LMD 2</b> of the same string in the <b>factored</b> grammar. Still a second tree, so it is still ambiguous.' },
   ppB: { start: 'S', nts: ['S'], mode: 'L',
     seq: [['S', 'S & S'], ['S', 'S # S'], ['S', 'a'], ['S', 'a'], ['S', 'a']],
     intro: '<b>LMD 2</b> for the same string.' },
@@ -120,5 +138,21 @@ const NOTES = {
     { msg: 'String with two operators: <code>a # a & a</code>. It has 2 leftmost derivations (two trees, shown by the steppers above).', html: '<p>LMD 1: S ⇒ S#S ⇒ a#S ⇒ a#S&S ⇒ a#a&S ⇒ a#a&a<br>LMD 2: S ⇒ S&S ⇒ S#S&S ⇒ a#S&S ⇒ a#a&S ⇒ a#a&a</p>' },
     { msg: 'Reason sentence.', html: '<p>Since for the string a#a&a there exists more than one leftmost derivation parse tree, the grammar is ambiguous.</p>' },
     { msg: 'Assumption + conversion. Keep <code>( S )</code> and <code>a</code> at the bottom level (brackets have the highest precedence).', html: '<p class="muted">[Assuming & has higher precedence than # and both are left associative]</p><div class="final-box">S → S # T | T<br>T → T & F | F<br>F → ( S ) | a</div>' },
+  ],
+  s23q1: [
+    { msg: 'Step 1: answer the question directly.', html: '<p>Yes, the grammar is ambiguous.</p>' },
+    { msg: 'Step 2: find the cause. <code>B → B # B</code> has B on <b>both</b> sides of #. That is the ambiguity pattern. String: <code>i # i # i</code> (two trees above). <code>i # i ~ i</code> also works.', html: '<p>String: <b>i # i # i</b>. It has two leftmost derivations (two parse trees), so the grammar is ambiguous.</p>' },
+    { msg: 'Step 3: write your assumption. The question says "without changing the original Language", so keep every operator and the same strings. Only fix the shape.', html: '<p class="muted">[Assuming ~ has higher precedence than #, and both # and ~ are left associative]</p>' },
+    { msg: 'Step 4: give # and ~ their own levels. Lower precedence (#) on top, left recursive. ~ below it, left recursive. S and A are already fine: keep them.', html: '<div class="final-box">S → A @ S | A<br>A → A & B | B<br>B → B # D | D<br>D → D ~ C | C<br>C → i</div>' },
+    { msg: 'Step 5: read precedence and associativity <b>from the grammar</b>. Higher level = lower precedence. Right recursive rule (S → A @ S) = right associative. Left recursive rule = left associative.', html: '<div class="tscroll"><table><thead><tr><th>Operator</th><th>Precedence</th><th>Associativity</th><th>Why</th></tr></thead><tbody><tr><td>@</td><td>1 (lowest)</td><td>right</td><td>S → A @ S (S on the right)</td></tr><tr><td>&amp;</td><td>2</td><td>left</td><td>A → A &amp; B</td></tr><tr><td>#</td><td>3</td><td>left</td><td>B → B # D</td></tr><tr><td>~</td><td>4 (highest)</td><td>left</td><td>D → D ~ C</td></tr></tbody></table></div>' },
+    { msg: 'Step 6: is it left recursive? Yes: A, B and D. Is it non-deterministic? Yes: <code>S → A @ S | A</code> both start with A. So convert both (the two steppers below).', html: '<p>The unambiguous grammar is left recursive (A, B, D) and non-deterministic (S). Convert to RRG, then to DG.</p>' },
+  ],
+  s23q3: [
+    { msg: 'Take the classic ambiguous grammar <code>E → E + E | E * E | id</code>. Two alternatives start with the same <code>E</code>, so it is also <b>non-deterministic</b>.', html: '<code>E → E + E | E * E | id</code> &nbsp; (ambiguous and NDG)' },
+    { msg: 'Left factor it (NDG → DG): take out the common <code>E</code>.', html: "<div class=\"final-box\">E → E E' | id<br>E' → + E | * E</div>" },
+    { msg: 'Test: <code>id + id * id</code> still has <b>two</b> leftmost derivations in the new grammar (steppers above). So it is still ambiguous.', html: '<p>id + id * id: still 2 LMDs, so still ambiguous.</p>' },
+    { msg: '<b>The reason:</b> left factoring only <b>delays</b> the choice. A → αβ₁ | αβ₂ becomes A → αA\', A\' → β₁ | β₂. The parser reads α first, then chooses. The <b>same</b> choices still exist, just later.', html: '<p><b>Reason:</b> left factoring removes common prefixes. It delays the choice between alternatives but does not remove any alternative or any tree.</p>' },
+    { msg: '<b>Proof idea (one-to-one mapping).</b> Every derivation step A ⇒ αβᵢ in the old grammar becomes exactly two steps A ⇒ αA\' ⇒ αβᵢ in the new one, and back. So each parse tree maps to exactly one parse tree. The <b>number</b> of trees for every string stays the same.', html: '<p><b>Proof:</b> each use of A → αβᵢ ↔ A → αA\' then A\' → βᵢ (one-to-one). So every string keeps the same number of parse trees. If a string had 2 trees before, it has 2 trees after.</p>' },
+    { msg: '<b>Conclusion.</b> Ambiguity comes from missing precedence/associativity (the X → X op X shape), not from common prefixes. Determinism and ambiguity are different properties.', html: '<p class="concl"><b>∴ Yes, it can be proved: "Determinism does not change ambiguity of a grammar."</b> To remove ambiguity you must restructure the grammar with precedence levels (lesson 6). Note: an ambiguous grammar can never be LL(1), even after left factoring.</p>' },
   ],
 };

@@ -17,6 +17,7 @@
   <a href="#s14"><span class="n">14</span>parsing</a>
   <a href="#s15"><span class="n">15</span>conflicts</a>
   <a href="#s16"><span class="n">16</span>past papers</a>
+  <a href="#s16b"><span class="n">16b</span>summer-23 mid</a>
   <a href="#s17"><span class="n">17</span>practice paper</a>
   <a href="#s18"><span class="n">18</span>true/false</a>
   <a href="#s19"><span class="n">19</span>solver</a>
@@ -44,6 +45,7 @@
 <tr><td>Quiz Q2</td><td>Convert Left Recursive Grammar (LRG) to Right Recursive Grammar (RRG)</td><td>5</td><td>7</td></tr>
 </tbody></table></div>
 <div class="key"><b>Plan for tonight (about 4 hours).</b><br>1. Lessons 1–4 fast (30 min): words you must know.<br>2. Lessons 5–8 (75 min): derivations, ambiguity, left recursion, left factoring. These give 17 of the marks.<br>3. Lessons 11–15 (90 min): the LL(1) question. Do every stepper. Then do it on paper.<br>4. Section 17: sit the practice paper with the timer. Mark yourself.<br>5. Morning: section 20 cheat sheet only.</div>
+<p>Section 16b solves the Summer-23 midterm from another section. It adds a "reason and prove" question type: read its Q3.</p>
 <p>Keys: <code>→</code> next step, <code>←</code> back (click a stepper first). The button at the bottom-right switches dark/light.</p>
 </section>
 
@@ -378,6 +380,49 @@ Y → g | ε</div>
 <h3>Extra LL(1) drill (from Assignment 01's grammar)</h3>
 <p>Assignment Q1 grammar <code>S → (L) | a</code>, <code>L → L, S | S</code> is left recursive. Remove it first: <code>L → S L'</code>, <code>L' → , S L' | ε</code>. Then:</p>
 <div class="stepper-host" data-ll1="full" data-g="drill" data-input="( a , ( a , a ) )" data-title="Drill: parse (a,(a,a))"></div>
+</section>
+
+<!-- 16b -->
+<section class="card" id="s16b"><span class="tag">past paper · summer 2023 · 20 marks · 1h20m</span><h2>16b · Midterm Summer 2023, fully solved</h2>
+<p class="muted">Instructor: Bijoy Rahman Arif (a different section). Four questions, 5 marks each. Question 3 is a "reason and prove" question, a type the Autumn-23 paper did not have.</p>
+
+<h3>Q1 [5] Ambiguity → unambiguous → precedence → RRG → DG</h3>
+<p>Is the grammar ambiguous? If so, find a string, convert to unambiguous grammar without changing the language. Find the operator precedence and associativity. If the unambiguous grammar is left recursive and/or non-deterministic, convert it to right recursive and deterministic as well.</p>
+<div class="formula">S → A @ S | A
+A → A & B | B
+B → B # B | B ~ C | C
+C → i</div>
+<div class="stepper-host" data-deriv="s23a" data-title="Q1 · LMD 1 of i # i # i"></div>
+<div class="stepper-host" data-deriv="s23b" data-title="Q1 · LMD 2 of i # i # i"></div>
+<div class="stepper-host" data-notes="s23q1" data-title="Q1 · write the answer"></div>
+<div class="stepper-host" data-conv="lr" data-g="s23fix" data-title="Q1 · remove left recursion (LRG → RRG)"></div>
+<div class="stepper-host" data-conv="lf" data-g="s23rr" data-title="Q1 · then left factor (NDG → DG)"></div>
+<div class="key"><b>Final answer (right recursive and deterministic):</b><br><code>S → A S'</code> · <code>S' → @ S | ε</code> · <code>A → B A'</code> · <code>A' → & B A' | ε</code> · <code>B → D B'</code> · <code>B' → # D B' | ε</code> · <code>D → C D'</code> · <code>D' → ~ C D' | ε</code> · <code>C → i</code></div>
+<details class="ex"><summary>Bonus check: the final grammar is LL(1)</summary><div class="stepper-host" data-ll1="table" data-g="s23det" data-title="LL(1) table of the final grammar"></div></details>
+<div class="warnbox">Do not stop after the unambiguous grammar: this question has <b>four</b> parts (string, conversion, precedence table, RRG + DG). <code>S → A @ S</code> is already right recursive, so @ is <b>right</b> associative. Do not "fix" it.</div>
+
+<h3>Q2 [5] LL(1) parse of <code>( ( ( (</code></h3>
+<div class="formula">S → ( ( b
+S → ε          variable = { S }, terminal = { (, ε }</div>
+<p><b>First, the conversions.</b> Left recursion? No: S does not start with S. Non-determinism? No: only one alternative starts with a terminal (the other is ε). So no conversion is needed. Note that <code>b</code> is not in the terminal set given. We treat it as a terminal, as written.</p>
+<div class="stepper-host" data-ll1="full" data-g="s23q2" data-input="( ( ( (" data-title="Q2 as printed: S → ((b | ε"></div>
+<details class="ex"><summary>Exam-format answer (write this)</summary><div data-answer data-g="s23q2" data-input="( ( ( ("></div></details>
+<div class="key"><b>Why parsing is not possible:</b> the grammar makes only two strings, <code>((b</code> and ε. After matching two <code>(</code>, the stack top is <code>b</code> but LA is <code>(</code>. A terminal mismatch is an error. Also, <code>b</code> is not in the given terminal set, so the grammar is not even consistent with its own definition.</div>
+<details class="ex"><summary>If the paper meant S → ( ( S | ε (b is a typo for S)</summary><p>Then the grammar makes an even number of <code>(</code>, and <code>( ( ( (</code> is accepted. Write both readings if you meet this in an exam. It costs 1 minute and protects your marks.</p><div class="stepper-host" data-ll1="parse" data-g="s23q2alt" data-input="( ( ( (" data-title="Q2 if b = S"></div></details>
+
+<h3>Q3 [5] Why does a deterministic grammar stay ambiguous?</h3>
+<p>An ambiguous grammar is non-deterministic (NDG). After converting it to a deterministic grammar it is still ambiguous. What is the reason? Is it possible to prove: <b>"Determinism does not change ambiguity of a grammar."</b>?</p>
+<div class="stepper-host" data-deriv="s23f1" data-title="Q3 · factored grammar, LMD 1 of id + id * id"></div>
+<div class="stepper-host" data-deriv="s23f2" data-title="Q3 · factored grammar, LMD 2 of id + id * id"></div>
+<div class="stepper-host" data-notes="s23q3" data-title="Q3 · the reasoning, step by step"></div>
+
+<h3>Q4 [5] True / False</h3>
+<div class="cls" data-a="T" data-why="LL(1) is top-down. Left recursion makes it loop forever, and it puts two rules in one table cell."><div class="q">(a) Left Recursive Grammar (LRG) can not be used in LL(1).</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="T" data-why="Two alternatives with the same prefix have the same FIRST terminal, so they fall in the same cell (FIRST/FIRST conflict)."><div class="q">(b) Non-deterministic Grammar (NDG) can not be used in LL(1).</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="F" data-why="RDP with backtracking can try every alternative, so it accepts grammars LL(1) cannot (for example NDG). It is more general, but slower. (Only RDP without backtracking, i.e. recursive predictive parsing, has the same power as LL(1).)"><div class="q">(c) Recursive Descent Parser (RDP) is as powerful as LL(1).</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="T" data-why="RDP has one procedure per non-terminal and calls them recursively. The recursion uses the program's call stack (OS stack). LL(1) uses its own explicit stack instead."><div class="q">(d) Recursive Descent Parser (RDP) uses OS stack.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="T" data-why="With backtracking it tries the first alternative, and if that fails it goes back and tries the next one, so common prefixes are not a problem."><div class="q">(e) Recursive Descent Parser (RDP) can use Non-deterministic Grammar (NDG).</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<p class="muted">(c) depends on which RDP is meant. The slides define RDP as top-down parsing <b>with backtracking</b>, so the answer above is False. Write the one-line reason either way.</p>
 </section>
 
 <!-- 17 -->
