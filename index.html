@@ -38,10 +38,6 @@ p code,li code,td code,.st-msg code{background:var(--soft);border:1px solid var(
 .muted{color:var(--muted)}
 .bad{color:var(--clay)}
 a{color:var(--teal)}
-nav.pills{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);display:flex;gap:6px;overflow-x:auto;padding:10px 0;scrollbar-width:none;height:49px}
-nav.pills::-webkit-scrollbar{display:none}
-nav.pills a{flex:0 0 auto;font:12px var(--mono);text-decoration:none;color:var(--ink);border:1px solid var(--line);background:var(--card);padding:4px 9px;border-radius:999px;white-space:nowrap}
-nav.pills a:hover{border-color:var(--rose)}
 section.card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:20px 18px;margin:18px 0}
 .tag{display:inline-block;font:11px var(--mono);color:var(--rose);background:var(--rose-t);padding:2px 8px;border-radius:3px;margin-bottom:6px;text-transform:lowercase}
 .exact{border-left:4px solid var(--lav);background:var(--lav-t);padding:10px 14px;margin:12px 0;border-radius:0 4px 4px 0}
@@ -197,10 +193,63 @@ footer{color:var(--muted);font-size:.85rem;text-align:center;margin-top:30px}
   .st-ctl button{padding:7px 9px}.b-end,.b-reset{flex:0 0 auto}
 }
 
-.timer.running{position:fixed;left:14px;bottom:14px;margin:0;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+.timer.running{position:fixed;left:238px;bottom:14px;margin:0;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+
+/* left sidebar */
+nav.side{position:fixed;left:0;top:0;bottom:0;width:224px;z-index:40;overflow-y:auto;background:var(--card);border-right:1px solid var(--line);padding:16px 10px 70px;display:flex;flex-direction:column;gap:2px;transition:transform .2s}
+.side-h{font:600 12px var(--mono);color:var(--muted);padding:2px 10px 12px;text-transform:lowercase}
+nav.side a{display:flex;gap:10px;align-items:baseline;font:13px var(--mono);color:var(--ink);text-decoration:none;padding:6px 10px;border-radius:4px;border-left:2px solid transparent}
+nav.side a .n{color:var(--muted);min-width:18px;text-align:right}
+nav.side a:hover{background:var(--soft)}
+nav.side a.on{background:var(--rose-t);border-left-color:var(--rose);font-weight:600}
+nav.side a.on .n{color:var(--rose)}
+.mbar{display:none}
+.scrim{display:none}
+body{padding-left:224px}
+html{scroll-padding-top:16px}
+.st-sticky{top:0}
+@media (max-width:999px){
+  body{padding-left:0}
+  html{scroll-padding-top:60px}
+  nav.side{transform:translateX(-100%);box-shadow:none}
+  nav.side.open{transform:none;box-shadow:4px 0 20px rgba(0,0,0,.35)}
+  .mbar{display:flex;position:sticky;top:0;z-index:30;height:49px;align-items:center;gap:10px;background:var(--bg);border-bottom:1px solid var(--line);padding:0 16px}
+  .mbar #cur{font:12px var(--mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .scrim.open{display:block;position:fixed;inset:0;z-index:35;background:rgba(0,0,0,.35)}
+  .st-sticky{top:49px}
+  .timer.running{left:14px}
+}
+nav.side{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+nav.side::-webkit-scrollbar{width:6px}nav.side::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}nav.side::-webkit-scrollbar-track{background:transparent}
 </style>
 </head>
 <body>
+<nav class="side" id="side" aria-label="Sections">
+  <div class="side-h">cse313 · midterm</div>
+  <a href="#s0"><span class="n">0</span>plan</a>
+  <a href="#s1"><span class="n">1</span>compiler</a>
+  <a href="#s2"><span class="n">2</span>phases</a>
+  <a href="#s3"><span class="n">3</span>lexical + RE</a>
+  <a href="#s4"><span class="n">4</span>grammar</a>
+  <a href="#s5"><span class="n">5</span>LMD/RMD</a>
+  <a href="#s6"><span class="n">6</span>ambiguity</a>
+  <a href="#s7"><span class="n">7</span>left recursion</a>
+  <a href="#s8"><span class="n">8</span>left factoring</a>
+  <a href="#s9"><span class="n">9</span>parser types</a>
+  <a href="#s10"><span class="n">10</span>top-down</a>
+  <a href="#s11"><span class="n">11</span>LL(1)</a>
+  <a href="#s12"><span class="n">12</span>FIRST/FOLLOW</a>
+  <a href="#s13"><span class="n">13</span>table</a>
+  <a href="#s14"><span class="n">14</span>parsing</a>
+  <a href="#s15"><span class="n">15</span>conflicts</a>
+  <a href="#s16"><span class="n">16</span>past papers</a>
+  <a href="#s17"><span class="n">17</span>practice paper</a>
+  <a href="#s18"><span class="n">18</span>true/false</a>
+  <a href="#s19"><span class="n">19</span>solver</a>
+  <a href="#s20"><span class="n">20</span>cheat sheet</a>
+</nav>
+<div class="mbar"><button id="menu" aria-controls="side" aria-expanded="false">☰ sections</button><span id="cur">0 plan</span></div>
+<div class="scrim" id="scrim"></div>
 <div class="wrap">
 <header class="top">
   <div class="kicker">cse313 · compiler construction · iub · autumn 2026 · section 1</div>
@@ -209,9 +258,6 @@ footer{color:var(--muted);font-size:.85rem;text-align:center;margin-top:30px}
   <p class="muted">Exam: Thursday 05/11/2026, 8:00–9:30 AM, BC 6007. Built from Ms. Nazma Sarker's slides, your class notes, Quiz 01/02 solutions, Assignment 01 and the Autumn-23 midterm.</p>
 </header>
 
-<nav class="pills" aria-label="Sections">
-  <a href="#s0">0 plan</a><a href="#s1">1 compiler</a><a href="#s2">2 phases</a><a href="#s3">3 lexical + RE</a><a href="#s4">4 grammar</a><a href="#s5">5 LMD/RMD</a><a href="#s6">6 ambiguity</a><a href="#s7">7 left recursion</a><a href="#s8">8 left factoring</a><a href="#s9">9 parser types</a><a href="#s10">10 top-down</a><a href="#s11">11 LL(1)</a><a href="#s12">12 FIRST/FOLLOW</a><a href="#s13">13 table</a><a href="#s14">14 parsing</a><a href="#s15">15 conflicts</a><a href="#s16">16 past papers</a><a href="#s17">17 practice paper</a><a href="#s18">18 true/false</a><a href="#s19">19 solver</a><a href="#s20">20 cheat sheet</a>
-</nav>
 
 <!-- 0 -->
 <section class="card" id="s0"><span class="tag">start here</span><h2>0 · What the exam looks like and how to use this page</h2>
@@ -1537,8 +1583,16 @@ function mountAll() {
 }
 document.addEventListener('DOMContentLoaded', () => {
   mountAll();
-  const nav = $('nav.pills');
-  nav.addEventListener('wheel', e => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { nav.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false });
+  const side = $('#side'), scrim = $('#scrim'), menu = $('#menu');
+  const setOpen = o => { side.classList.toggle('open', o); scrim.classList.toggle('open', o); menu.setAttribute('aria-expanded', o); };
+  menu.onclick = () => setOpen(!side.classList.contains('open'));
+  scrim.onclick = () => setOpen(false);
+  $$('a', side).forEach(a => a.addEventListener('click', () => setOpen(false)));
+  const links = new Map($$('a', side).map(a => [a.getAttribute('href').slice(1), a]));
+  const mark = id => { links.forEach((a, k) => a.classList.toggle('on', k === id)); const a = links.get(id); if (a) { $('#cur').textContent = a.textContent.replace(/^(\d+)/, '$1 '); a.scrollIntoView({ block: 'nearest' }); } };
+  const io = new IntersectionObserver(es => { const v = es.filter(e => e.isIntersecting).sort((x, y) => x.boundingClientRect.top - y.boundingClientRect.top)[0]; if (v) mark(v.target.id); }, { rootMargin: '-20% 0px -70% 0px' });
+  $$('section.card').forEach(sec => io.observe(sec));
+  mark('s0');
 });
 </script>
 </body>

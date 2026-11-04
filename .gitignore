@@ -1,0 +1,6 @@
+# Course files stay local: copyrighted slides/book, exam papers, personal submission,
+# and a marks sheet with other students' data.
+resources/
+publish/
+dist/
+__pycache__/

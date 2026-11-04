@@ -1,0 +1,493 @@
+<nav class="side" id="side" aria-label="Sections">
+  <div class="side-h">cse313 · midterm</div>
+  <a href="#s0"><span class="n">0</span>plan</a>
+  <a href="#s1"><span class="n">1</span>compiler</a>
+  <a href="#s2"><span class="n">2</span>phases</a>
+  <a href="#s3"><span class="n">3</span>lexical + RE</a>
+  <a href="#s4"><span class="n">4</span>grammar</a>
+  <a href="#s5"><span class="n">5</span>LMD/RMD</a>
+  <a href="#s6"><span class="n">6</span>ambiguity</a>
+  <a href="#s7"><span class="n">7</span>left recursion</a>
+  <a href="#s8"><span class="n">8</span>left factoring</a>
+  <a href="#s9"><span class="n">9</span>parser types</a>
+  <a href="#s10"><span class="n">10</span>top-down</a>
+  <a href="#s11"><span class="n">11</span>LL(1)</a>
+  <a href="#s12"><span class="n">12</span>FIRST/FOLLOW</a>
+  <a href="#s13"><span class="n">13</span>table</a>
+  <a href="#s14"><span class="n">14</span>parsing</a>
+  <a href="#s15"><span class="n">15</span>conflicts</a>
+  <a href="#s16"><span class="n">16</span>past papers</a>
+  <a href="#s17"><span class="n">17</span>practice paper</a>
+  <a href="#s18"><span class="n">18</span>true/false</a>
+  <a href="#s19"><span class="n">19</span>solver</a>
+  <a href="#s20"><span class="n">20</span>cheat sheet</a>
+</nav>
+<div class="mbar"><button id="menu" aria-controls="side" aria-expanded="false">☰ sections</button><span id="cur">0 plan</span></div>
+<div class="scrim" id="scrim"></div>
+<div class="wrap">
+<header class="top">
+  <div class="kicker">cse313 · compiler construction · iub · autumn 2026 · section 1</div>
+  <h1>Midterm, step by step</h1>
+  <p>Syllabus topics 1–14, taught from zero. Every method has a <b>stepper</b>: press <b>Next</b> (or the → key) and it does <b>one small step</b>, like a debugger. Most text uses short, simple sentences. <span style="background:var(--lav-t);padding:0 4px">Purple boxes</span> hold exact exam wording to memorise.</p>
+  <p class="muted">Exam: Thursday 05/11/2026, 8:00–9:30 AM, BC 6007. Built from Ms. Nazma Sarker's slides, your class notes, Quiz 01/02 solutions, Assignment 01 and the Autumn-23 midterm.</p>
+</header>
+
+
+<!-- 0 -->
+<section class="card" id="s0"><span class="tag">start here</span><h2>0 · What the exam looks like and how to use this page</h2>
+<p>The last midterm from this course (Autumn-23, SET-A) had this shape. Expect the same shape tomorrow.</p>
+<div class="tscroll"><table class="cmp"><thead><tr><th>Part</th><th>Question type</th><th>Marks</th><th>Lesson</th></tr></thead><tbody>
+<tr><td>Mid Q1</td><td>Prove the grammar is ambiguous or NOT. If ambiguous, convert to unambiguous.</td><td>7</td><td>5, 6</td></tr>
+<tr><td>Mid Q2</td><td>Write First() and Follow(). Draw the LL(1) parsing table. Parse a string showing all steps.</td><td>8</td><td>11–15</td></tr>
+<tr><td>Mid Q3</td><td>True / False (5 statements about parsers and grammars)</td><td>5</td><td>9, 10, 18</td></tr>
+<tr><td>Quiz Q1</td><td>Convert Non-Deterministic Grammar (NDG) to Deterministic Grammar (DG)</td><td>5</td><td>8</td></tr>
+<tr><td>Quiz Q2</td><td>Convert Left Recursive Grammar (LRG) to Right Recursive Grammar (RRG)</td><td>5</td><td>7</td></tr>
+</tbody></table></div>
+<div class="key"><b>Plan for tonight (about 4 hours).</b><br>1. Lessons 1–4 fast (30 min): words you must know.<br>2. Lessons 5–8 (75 min): derivations, ambiguity, left recursion, left factoring. These give 17 of the marks.<br>3. Lessons 11–15 (90 min): the LL(1) question. Do every stepper. Then do it on paper.<br>4. Section 17: sit the practice paper with the timer. Mark yourself.<br>5. Morning: section 20 cheat sheet only.</div>
+<p>Keys: <code>→</code> next step, <code>←</code> back (click a stepper first). The button at the bottom-right switches dark/light.</p>
+</section>
+
+<!-- 1 -->
+<section class="card" id="s1"><span class="tag">topic 1</span><h2>1 · Introduction to compiler</h2>
+<p>A computer understands only machine code (0s and 1s). People write programs in high-level languages (C, Java, Python). This is <b>source code</b>. A <b>language processor</b> translates source code so the computer can run it.</p>
+<div class="grid">
+  <div class="mini-card"><b>Compiler</b>Reads the <b>whole</b> program in one go and translates it into a target program.<small>C, C++ · output: target program, run later</small></div>
+  <div class="mini-card"><b>Interpreter</b>Runs the source program directly, statement by statement. No target program.<small>Python (scripting language)</small></div>
+  <div class="mini-card"><b>Assembler</b>Translates assembly language into machine code.<small>mnemonics: ADD, SUB, MUL, DIV, MOV</small></div>
+  <div class="mini-card"><b>Hybrid (Java)</b>Compile to <b>bytecode</b>, then a virtual machine interprets it.<small>JIT compilers turn bytecode into machine code just before it runs</small></div>
+</div>
+<div class="exact">A compiler is a program that reads the whole program written in a source language/high level language as a whole in one go and translates it into an equivalent program in a target language.</div>
+<div class="exact">Instead of producing a target program as a translation, an interpreter appears to directly execute the operations specified in the source program on inputs supplied by the user.</div>
+<div class="tscroll"><table class="cmp"><thead><tr><th></th><th>Compiler</th><th>Interpreter</th></tr></thead><tbody>
+<tr><td>Reads</td><td>whole program at once</td><td>one statement at a time</td></tr>
+<tr><td>Output</td><td>target program (machine/assembly code)</td><td>no target program, gives output directly</td></tr>
+<tr><td>Errors</td><td>reports after it scans the program</td><td>stops at the first error</td></tr>
+<tr><td>Speed of running</td><td>faster (already translated)</td><td>slower (translates while running)</td></tr>
+</tbody></table></div>
+<p>The jobs of a compiler: <b>translation</b>, <b>validation</b> (find errors), <b>optimization</b>.</p>
+</section>
+
+<!-- 2 -->
+<section class="card" id="s2"><span class="tag">topic 2</span><h2>2 · Different phases of compilation</h2>
+<p>A compiler works in 6 phases. Each phase takes the output of the one before it.</p>
+<svg class="dia" viewBox="0 0 400 330" role="img" aria-label="Six phases of a compiler">
+  <rect x="110" y="4" width="180" height="26" rx="3" class="bx"/><text x="200" y="17" class="tx">source program</text>
+  <g><rect x="110" y="44" width="180" height="30" rx="3" class="bx bx-a"/><text x="200" y="59" class="tx">1 Lexical analyzer</text>
+  <rect x="110" y="88" width="180" height="30" rx="3" class="bx bx-a"/><text x="200" y="103" class="tx">2 Syntax analyzer (parser)</text>
+  <rect x="110" y="132" width="180" height="30" rx="3" class="bx bx-a"/><text x="200" y="147" class="tx">3 Semantic analyzer</text>
+  <rect x="110" y="176" width="180" height="30" rx="3" class="bx bx-b"/><text x="200" y="191" class="tx">4 Intermediate code gen.</text>
+  <rect x="110" y="220" width="180" height="30" rx="3" class="bx bx-b"/><text x="200" y="235" class="tx">5 Code optimizer</text>
+  <rect x="110" y="264" width="180" height="30" rx="3" class="bx bx-b"/><text x="200" y="279" class="tx">6 Code generator</text></g>
+  <rect x="110" y="304" width="180" height="22" rx="3" class="bx"/><text x="200" y="315" class="tx">target program</text>
+  <path class="ln" d="M200 30v14M200 74v14M200 118v14M200 162v14M200 206v14M200 250v14M200 294v10"/>
+  <rect x="6" y="140" width="90" height="44" rx="3" class="bx bx-c"/><text x="51" y="156" class="tx">symbol</text><text x="51" y="170" class="tx">table</text>
+  <rect x="304" y="140" width="90" height="44" rx="3" class="bx bx-c"/><text x="349" y="156" class="tx">error</text><text x="349" y="170" class="tx">handler</text>
+  <path class="ln" d="M96 162h14M290 162h14" stroke-dasharray="3 3"/>
+  <text x="355" y="70" class="tx-s">ANALYSIS</text><text x="355" y="82" class="tx-s">(front end)</text>
+  <text x="355" y="230" class="tx-s">SYNTHESIS</text><text x="355" y="242" class="tx-s">(back end)</text>
+</svg>
+<div class="memo"><b>"Lazy Students Sleep In Our Class"</b>: Lexical, Syntax, Semantic, Intermediate, Optimization, Code generation.</div>
+<div class="stepper-host" data-notes="phases" data-title="One statement through all 6 phases"></div>
+<div class="grid">
+  <div class="mini-card"><b>Lexical</b>Makes tokens. Removes spaces and comments.</div>
+  <div class="mini-card"><b>Syntax</b>Checks structure with a grammar. Builds a parse tree.</div>
+  <div class="mini-card"><b>Semantic</b>Checks meaning: types, declared variables.</div>
+  <div class="mini-card"><b>Intermediate</b>Machine-independent code (three-address code).</div>
+  <div class="mini-card"><b>Optimization</b>Better code, same result.</div>
+  <div class="mini-card"><b>Code generation</b>Target code: assembly / machine code.</div>
+</div>
+</section>
+
+<!-- 3 -->
+<section class="card" id="s3"><span class="tag">topic 3</span><h2>3 · Lexical analysis and regular expressions</h2>
+<p>The lexical analyzer (also called <b>scanner</b> or <b>tokenizer</b>) reads the source code as a stream of characters, from left to right. It cuts the stream into <b>tokens</b> and sends them to the parser. It also removes white space and comments. It puts identifiers in the <b>symbol table</b>.</p>
+<div class="tscroll"><table class="cmp"><thead><tr><th>Term</th><th>Meaning</th><th>Example</th></tr></thead><tbody>
+<tr><td><b>Token</b></td><td>a class (category) of strings</td><td>identifier, number, keyword, operator, separator</td></tr>
+<tr><td><b>Lexeme</b></td><td>the actual characters in the code that match a token</td><td><code>result</code>, <code>a</code>, <code>10</code></td></tr>
+<tr><td><b>Pattern</b></td><td>the rule that describes the lexemes of a token (a regular expression)</td><td><code>[a-z][a-zA-Z0-9]*</code></td></tr>
+</tbody></table></div>
+<div class="exact">A lexical token is a sequence of characters that can be treated as a unit in the grammar of the programming languages. Token format: &lt;token-name, attribute-value&gt;</div>
+<p>Example from class: <code>int a, b; a = 10; return 0;</code> inside <code>int main() { ... }</code> gives 18 tokens: <code>int main ( ) { int a , b ; a = 10 ; return 0 ; }</code>. Comments are not tokens.</p>
+<details class="ex"><summary>Try: how many tokens in <code>printf("%d", result);</code>?</summary><p><b>7 tokens:</b> <code>printf</code> · <code>(</code> · <code>"%d"</code> · <code>,</code> · <code>result</code> · <code>)</code> · <code>;</code>. Rule: a whole string literal in quotes is <b>one</b> token. (The slides' example <code>printf("...");</code> has 5: printf ( "..." ) ;)</p></details>
+<h3>Regular expressions (RE)</h3>
+<p>An RE is a short formula that describes a set of strings (a <b>language</b>). The lexer uses REs as patterns.</p>
+<div class="tscroll"><table class="cmp"><thead><tr><th>Operator</th><th>Meaning</th><th>Example → strings</th></tr></thead><tbody>
+<tr><td><code>a|b</code></td><td>a <b>or</b> b (union)</td><td>a, b</td></tr>
+<tr><td><code>ab</code></td><td>a <b>then</b> b (concatenation)</td><td>ab</td></tr>
+<tr><td><code>a*</code></td><td>zero or more a (Kleene star)</td><td>ε, a, aa, aaa, …</td></tr>
+<tr><td><code>a+</code></td><td>one or more a</td><td>a, aa, …</td></tr>
+<tr><td><code>a?</code></td><td>zero or one a (optional)</td><td>ε, a</td></tr>
+<tr><td><code>[a-z]</code></td><td>any one letter a to z</td><td>a, q, z</td></tr>
+</tbody></table></div>
+<p>Class example: <code>num → digit+ ( . digit+ )?</code> means "one or more digits, then optionally a dot and more digits": 7, 42, 3.14.</p>
+<p>Class example: <code>(a|b)*ab</code> = any mix of a and b, but it must <b>end with ab</b>: ab, aab, bab, aaab. Its transition diagram (from your notes):</p>
+<div class="row"><input type="text" id="nfa-in" value="abab" aria-label="string to test"><button id="nfa-run" class="primary">Run the NFA</button></div>
+<div id="nfa-stepper"></div>
+<div class="warnbox">Regular expressions (finite automata) <b>cannot</b> check balanced brackets like <code>((()))</code>. They cannot count deep nesting. That is why the parser uses a <b>context-free grammar</b>, which is more powerful.</div>
+</section>
+
+<!-- 4 -->
+<section class="card" id="s4"><span class="tag">topic 4 · basics</span><h2>4 · Grammar (CFG): the words you must know</h2>
+<p>A <b>context-free grammar (CFG)</b> is a set of rules that says how to build valid sentences of a language. The parser uses it.</p>
+<div class="formula">E → E + T | T
+│   └───┬───┘
+│     right side (production body): terminals and non-terminals
+└ left side: one non-terminal</div>
+<div class="grid">
+  <div class="mini-card"><b>Terminal</b>A real token. It never changes. Lower-case, symbols, <code>id</code>.<small>a, b, +, (, id, int</small></div>
+  <div class="mini-card"><b>Non-terminal</b>A variable. It gets replaced by a rule. Upper-case.<small>E, T, S, A, expr</small></div>
+  <div class="mini-card"><b>Production</b>One rule: left side → right side.<small>T → T * F</small></div>
+  <div class="mini-card"><b>Start symbol</b>Where every derivation starts. The left side of the first rule.<small>S or E</small></div>
+  <div class="mini-card"><b>ε (epsilon)</b>The empty string. "Nothing".<small>E' → ε</small></div>
+  <div class="mini-card"><b>|</b>Means "or": several alternatives for one left side.<small>A → a | b</small></div>
+</div>
+<p>Assignment 01, Q1(a): for <code>S → (L) | a</code>, <code>L → L, S | S</code>:</p>
+<div class="key">Terminals = { (, ), a, , } · Non-terminals = { S, L } · Productions = S → (L), S → a, L → L,S, L → S (4 productions) · Start symbol = S</div>
+<div class="cls" data-a="T" data-why="It is upper-case and appears on a left side, so it is a non-terminal."><div class="q">In <code>E' → + T E' | ε</code>, is <code>T</code> a terminal or a non-terminal?</div><button data-v="t">Terminal</button><button data-v="T">Non-terminal</button><div class="fb"></div></div>
+<div class="cls" data-a="t" data-why="id is a token from the lexer. It never gets replaced, so it is a terminal."><div class="q">Is <code>id</code> a terminal or a non-terminal?</div><button data-v="t">Terminal</button><button data-v="T">Non-terminal</button><div class="fb"></div></div>
+<div class="cls" data-a="n" data-why="ε means empty. It is not a terminal and it never gets a column in the LL(1) table."><div class="q">Is <code>ε</code> a terminal?</div><button data-v="y">Yes</button><button data-v="n">No</button><div class="fb"></div></div>
+</section>
+
+<!-- 5 -->
+<section class="card" id="s5"><span class="tag">topic 5</span><h2>5 · Parse trees: leftmost (LMD) and rightmost (RMD) derivation</h2>
+<div class="exact">Derivation: A sequence of grammar rule applications and substitutions that transform a starting non-term into a sequence of terminals / tokens.</div>
+<p>At each step you replace <b>one</b> non-terminal by one of its right sides. Which one?</p>
+<div class="tscroll"><table class="cmp"><thead><tr><th>LMD (leftmost)</th><th>RMD (rightmost)</th></tr></thead><tbody>
+<tr><td>Always replace the <b>leftmost</b> non-terminal.</td><td>Always replace the <b>rightmost</b> non-terminal.</td></tr>
+<tr><td>Used by <b>top-down</b> parsers (LL).</td><td>Its reverse is used by <b>bottom-up</b> parsers (LR).</td></tr>
+</tbody></table></div>
+<div class="stepper-host" data-deriv="assign" data-title="Slides: derive id = id + real - integer ; (LMD)"></div>
+<p>A <b>parse tree</b> shows a derivation as a tree. The root is the start symbol. Inner nodes are non-terminals. Leaves are terminals. Read the leaves left to right and you get the string.</p>
+<div class="stepper-host" data-deriv="rmdParen" data-title="Notes: RMD of ( id * id ) + id"></div>
+<h3>Assignment 01, Q1(b): LMD and RMD of <code>(a, (a, a))</code></h3>
+<div class="stepper-host" data-deriv="asL" data-title="LMD of (a,(a,a))"></div>
+<div class="stepper-host" data-deriv="asR" data-title="RMD of (a,(a,a))"></div>
+<div class="warnbox">In an LMD, check every line: did you replace the <b>leftmost</b> non-terminal? A common mistake is to replace a non-terminal in the middle. Also: an unambiguous grammar gives the <b>same tree</b> for LMD and RMD. Only the order of steps changes.</div>
+</section>
+
+<!-- 6 -->
+<section class="card" id="s6"><span class="tag">topic 4 · mid Q1 (7 marks)</span><h2>6 · Ambiguous and unambiguous grammar, and conversion</h2>
+<div class="exact">A grammar is ambiguous if there exists a string that has more than one leftmost derivation (more than one parse tree, or more than one rightmost derivation).</div>
+<p>Why is that bad? Two trees = two meanings. From your notes: <code>id + id * id</code> with 3, 2, 5. Watch both trees.</p>
+<div class="stepper-host" data-deriv="ambL1" data-title="LMD 1 of id + id * id"></div>
+<div class="stepper-host" data-deriv="ambL2" data-title="LMD 2 of id + id * id"></div>
+<div class="exact">The Ambiguous Grammar does not consider the Precedence and Associativity.</div>
+<h3>Precedence and associativity</h3>
+<div class="grid">
+  <div class="mini-card"><b>Precedence</b>Which operator goes first. * / are higher than + −. ^ is highest.<small>3 + 2 * 5 = 13, not 25</small></div>
+  <div class="mini-card"><b>Left associative</b>Same operator twice: do the <b>left</b> one first. + − * /<small>3 + 2 + 1 → 5 + 1 → 6</small></div>
+  <div class="mini-card"><b>Right associative</b>Do the <b>right</b> one first. ^ (power)<small>3 ^ 5 ^ 2 = 3 ^ 25</small></div>
+</div>
+<div class="exact">Lower precedence operation rules should be declared in the upper level in the Grammar. Higher precedence operation rules should be declared in the lower level in the Grammar. Operators with same precedence must be resolved by Associativity.</div>
+<div class="memo"><b>Low on top, high at the bottom.</b> Left associative → left recursive (<code>E → E + T</code>). Right associative → right recursive (<code>F → G ^ F</code>).</div>
+<div class="stepper-host" data-notes="ambRecipe" data-title="Recipe: convert ambiguous → unambiguous (class notes example)"></div>
+<div class="stepper-host" data-deriv="fixed" data-title="After conversion: only one tree for 3 + 2 * 6"></div>
+<h3>The exam answer format (Quiz 01, faculty solution)</h3>
+<div class="stepper-host" data-deriv="q1a" data-title="Quiz 01 · LMD 1 of id ; id & id"></div>
+<div class="stepper-host" data-deriv="q1b" data-title="Quiz 01 · LMD 2 of id ; id & id"></div>
+<div class="stepper-host" data-notes="quiz1amb" data-title="Quiz 01 · write the answer like the faculty"></div>
+<h3>How to show a grammar is NOT ambiguous</h3>
+<p>Some questions ask "ambiguous or NOT". A layered grammar is <b>not</b> ambiguous when:</p>
+<ul><li>each operator appears in <b>one</b> rule only, at <b>one</b> level;</li><li>each rule recurses on <b>one side only</b> (<code>E → E @ S | S</code>, not <code>E → E @ E</code>);</li><li>so for any string there is only one way to build the tree.</li></ul>
+<p>Mid Autumn-23 Q1: <code>E → E@S | S</code>, <code>S → S#B | B</code>, <code>B → C~B | C</code>, <code>C → C?A | ε</code>, <code>A → a</code>. Every operator (@, #, ~, ?) has its own level and recurses on one side ∴ <b>NOT ambiguous</b>. Write it like this: "Each operator is at a different level of the grammar and each rule is either left or right recursive, never both. So every string has exactly one leftmost derivation. ∴ The grammar is unambiguous."</p>
+<p class="muted">Note: the printed paper shows <code>C → C?A / E</code>. With <code>E</code> there, no terminal string can be made at all, so it must be ε (we checked by computer). If you see something like this, state what you assume.</p>
+<div class="warnbox">The pattern <code>X → X op X</code> (same non-terminal on <b>both</b> sides of an operator) is the sign of ambiguity. Look for it first. Assignment Q2(iv) <code>B → B∆B | b</code> is ambiguous for this reason, even though E and T look fine.</div>
+<details class="ex"><summary>Assignment 01 Q2 and Q3: quick answers</summary>
+<p><b>(i)</b> <code>S → AS | b</code>, <code>A → SA | a</code>: ambiguous. <code>abab</code> has two LMDs:<br>S ⇒ AS ⇒ aS ⇒ aAS ⇒ aSAS ⇒ abAS ⇒ abaS ⇒ abab<br>S ⇒ AS ⇒ SAS ⇒ ASAS ⇒ aSAS ⇒ abAS ⇒ abaS ⇒ abab<br><span class="muted">This is not an operator grammar, so the precedence recipe does not apply. Showing ambiguity is the part that scores.</span></p>
+<p><b>(ii)</b> <code>S → aa | aS | a</code>: ambiguous. <code>aa</code> has two LMDs: S ⇒ aa, and S ⇒ aS ⇒ aa. Fix: <code>S → aS | a</code>.</p>
+<p><b>(iii)</b> <code>S → aS | aSbS | ε</code>: ambiguous (the dangling-else shape). <code>aab</code> has two LMDs: S ⇒ aS ⇒ aaSbS ⇒ aabS ⇒ aab and S ⇒ aSbS ⇒ aaSbS ⇒ aabS ⇒ aab.</p>
+<p><b>(iv)</b> <code>B → B∆B | b</code> is ambiguous (<code>b∆b∆b</code>). Fix that level: <code>B → B∆C | C</code>, <code>C → b</code> (assume ∆ left associative).</p>
+<p><b>Q3</b> <code>E → E+E | E&lt;E | E=E | id</code>: ambiguous (<code>id+id&lt;id</code> has two trees). Assume precedence + &gt; &lt; &gt; =, all left associative:<br><code>E → E = R | R</code>, <code>R → R &lt; P | P</code>, <code>P → P + Q | Q</code>, <code>Q → id</code>.</p>
+</details>
+</section>
+
+<!-- 7 -->
+<section class="card" id="s7"><span class="tag">topic 6 · quiz Q2 (5 marks)</span><h2>7 · Left recursion: LRG → RRG</h2>
+<div class="exact">A grammar is left-recursive if it has a non-terminal A, such that there is a derivation A ⇒⁺ Aα, for some string α.</div>
+<p>In simple words: a rule like <code>A → A α</code>, where the left side appears again as the <b>first</b> symbol on the right. A top-down parser then loops forever:</p>
+<div class="stepper-host" data-notes="loop" data-title="Why left recursion breaks a top-down parser"></div>
+<div class="formula">A → A α₁ | A α₂ | β₁ | β₂        (α = what follows A, β = the others)
+⇓
+A  → β₁ A' | β₂ A'
+A' → α₁ A' | α₂ A' | ε</div>
+<div class="memo"><b>"β goes first, α goes to the new guy, new guy ends with ε."</b></div>
+<p>Slides example (you will reuse it in LL(1)):</p>
+<div class="stepper-host" data-conv="lr" data-g="slideslr" data-title="Slides: E → E + T | T ..."></div>
+<p>Mid Autumn-23 quiz Q2 (only direct left recursion):</p>
+<div class="stepper-host" data-conv="lr" data-g="midlr" data-title="Mid Aut-23 quiz Q2"></div>
+<h3>Indirect left recursion (harder, 4 marks in Quiz 01)</h3>
+<p>Sometimes the loop goes through another non-terminal: <code>A → B c</code> and <code>B → A e</code>. Method (from the faculty solution):</p>
+<ol><li>Order the non-terminals: A, B, C (top to bottom).</li><li>Fix A's direct left recursion.</li><li>In B, replace any <code>A …</code> at the start with A's new rules. Then fix B's direct left recursion.</li><li>In C, replace <code>A …</code> and <code>B …</code> at the start. Then fix C. Box each result.</li></ol>
+<div class="stepper-host" data-conv="lr" data-g="q1lr" data-title="Quiz 01 Q3 (matches the faculty answer)"></div>
+<details class="ex"><summary>Assignment 01 Q5 (i) and (ii)</summary><div class="stepper-host" data-conv="lr" data-g="aslr1" data-title="Q5(i)"></div><div class="stepper-host" data-conv="lr" data-g="aslr2" data-title="Q5(ii)"></div></details>
+<div class="warnbox">Do not forget <b>ε</b> in the A' rule. Do not forget to add A' at the end of <b>every</b> β alternative. Keep the order of symbols inside α exactly as it was.</div>
+</section>
+
+<!-- 8 -->
+<section class="card" id="s8"><span class="tag">topic 7 · quiz Q1 (5 marks)</span><h2>8 · Deterministic vs non-deterministic grammar: left factoring (NDG → DG)</h2>
+<p>A grammar is <b>non-deterministic (NDG)</b> when two alternatives of the same non-terminal start with the same symbols. Example: <code>A → a b | a c</code>. Looking at <code>a</code>, the parser cannot know which one to pick. A <b>deterministic grammar (DG)</b> never has this problem.</p>
+<div class="formula">A → α β₁ | α β₂ | γ          (α = common prefix)
+⇓
+A  → α A' | γ
+A' → β₁ | β₂                  (if a βᵢ is empty, write ε)</div>
+<div class="memo"><b>"Pull out the common part once. The new guy gets the leftovers."</b> Repeat until no two alternatives start the same way.</div>
+<div class="stepper-host" data-conv="lf" data-g="q1lf" data-title="Quiz 01 Q2 (matches the faculty answer)"></div>
+<div class="stepper-host" data-conv="lf" data-g="midlf" data-title="Mid Aut-23 quiz Q1"></div>
+<details class="ex"><summary>Assignment 01 Q4 (i) and (ii)</summary><div class="stepper-host" data-conv="lf" data-g="aslf1" data-title="Q4(i)"></div><div class="stepper-host" data-conv="lf" data-g="aslf2" data-title="Q4(ii)"></div></details>
+<div class="warnbox">Take the <b>longest</b> common prefix, not just the first letter. If one alternative is exactly the prefix (like <code>ab</code> in <code>abcA | ab</code>), the new rule gets <b>ε</b>. Also check the new non-terminals: they can be non-deterministic again (S' → cA | cB needs S'').</div>
+<div class="tscroll"><table class="cmp"><thead><tr><th></th><th>Left recursion removal</th><th>Left factoring</th></tr></thead><tbody>
+<tr><td>Problem</td><td><code>A → A α</code> (loops forever)</td><td><code>A → α β₁ | α β₂</code> (cannot choose)</td></tr>
+<tr><td>Result</td><td>LRG → RRG</td><td>NDG → DG</td></tr>
+<tr><td>New rule ends with</td><td>A' → α A' | <b>ε</b></td><td>A' → β₁ | β₂</td></tr>
+</tbody></table></div>
+</section>
+
+<!-- 9 -->
+<section class="card" id="s9"><span class="tag">topic 8</span><h2>9 · Classification of parsers</h2>
+<svg class="dia" viewBox="0 0 640 250" role="img" aria-label="Parser classification tree">
+  <rect x="270" y="4" width="100" height="26" rx="3" class="bx"/><text x="320" y="17" class="tx">Parser</text>
+  <rect x="80" y="54" width="170" height="26" rx="3" class="bx bx-a"/><text x="165" y="67" class="tx">Top-Down (TDP)</text>
+  <rect x="390" y="54" width="170" height="26" rx="3" class="bx bx-b"/><text x="475" y="67" class="tx">Bottom-Up (BUP)</text>
+  <path class="ln" d="M320 30v12H165v12M320 42h155v12"/>
+  <rect x="6" y="104" width="140" height="34" rx="3" class="bx bx-a"/><text x="76" y="115" class="tx">with backtracking</text><text x="76" y="129" class="tx-s">brute force / rec. descent</text>
+  <rect x="160" y="104" width="140" height="34" rx="3" class="bx bx-a"/><text x="230" y="115" class="tx">no backtracking</text><text x="230" y="129" class="tx-s">predictive parser</text>
+  <path class="ln" d="M165 80v12H76v12M165 92h65v12"/>
+  <rect x="150" y="164" width="76" height="40" rx="3" class="bx bx-a"/><text x="188" y="178" class="tx-s">recursive</text><text x="188" y="192" class="tx-s">predictive</text>
+  <rect x="236" y="164" width="76" height="40" rx="3" class="bx bx-a"/><text x="274" y="178" class="tx">LL(1)</text><text x="274" y="192" class="tx-s">table driven</text>
+  <path class="ln" d="M230 138v14h-42v12M230 152h44v12"/>
+  <rect x="400" y="104" width="150" height="26" rx="3" class="bx bx-b"/><text x="475" y="117" class="tx">Shift-Reduce</text>
+  <path class="ln" d="M475 80v24"/>
+  <rect x="340" y="160" width="120" height="34" rx="3" class="bx bx-b"/><text x="400" y="171" class="tx">Operator</text><text x="400" y="185" class="tx">precedence</text>
+  <rect x="480" y="160" width="150" height="34" rx="3" class="bx bx-b"/><text x="555" y="171" class="tx">LR parsers</text><text x="555" y="185" class="tx-s">LR(0) SLR(1) LALR(1) CLR(1)</text>
+  <path class="ln" d="M475 130v16h-75v14M475 146h80v14"/>
+  <text x="320" y="236" class="tx-s">TDP uses LMD · BUP uses the reverse of RMD · both read input left to right</text>
+</svg>
+<div class="tscroll"><table class="cmp"><thead><tr><th>Top-down parser</th><th>Bottom-up parser</th></tr></thead><tbody>
+<tr><td>Starts from the <b>top</b> (start symbol) and goes down to the leaves.</td><td>Starts from the <b>leaves</b> (input) and goes up to the start symbol.</td></tr>
+<tr><td>Uses <b>Left Most Derivation</b>.</td><td>Uses <b>Reverse of Right Most Derivation</b>.</td></tr>
+<tr><td>Main decision: <b>what</b> production rule to use.</td><td>Main decision: <b>when</b> to use a rule to reduce.</td></tr>
+<tr><td>Cannot use left recursion. Predictive needs a deterministic grammar.</td><td>Can handle left recursion.</td></tr>
+</tbody></table></div>
+<div class="exact">1. Top-Down Parser: The parse tree is created top to bottom, starting from the root. 2. Bottom-Up Parser: The parse tree is created bottom to top, starting from the leaves. Both Top-Down and Bottom-Up parsers scan the input from left to right (One symbol at a time).</div>
+<div class="stepper-host" data-deriv="tdp" data-title="Slides: top-down on abbcde (LMD)"></div>
+<div class="stepper-host" data-deriv="bup" data-title="Slides: bottom-up = this RMD read in reverse"></div>
+<div class="warnbox">Brute force parser = top-down <b>with backtracking</b>. It is <b>not</b> bottom-up. (Mid Aut-23 Q3(e) asked exactly this.)</div>
+</section>
+
+<!-- 10 -->
+<section class="card" id="s10"><span class="tag">topics 9–10</span><h2>10 · Introduction to top-down parsing</h2>
+<p>Two kinds of top-down parser:</p>
+<div class="grid">
+  <div class="mini-card"><b>Recursive descent (backtracking)</b>One procedure per non-terminal. Tries the alternatives one by one. Goes back on failure.<small>general, but not efficient</small></div>
+  <div class="mini-card"><b>Predictive (no backtracking)</b>Looks at the next token and picks the right rule the first time.<small>efficient · needs an LL(1) grammar</small></div>
+</div>
+<div class="stepper-host" data-notes="backtrack" data-title="Backtracking, one step at a time"></div>
+<div class="exact">When re-writing a non-terminal in a derivation step, a predictive parser can uniquely choose a production rule by just looking the current symbol in the input string.</div>
+</section>
+
+<!-- 11 -->
+<section class="card" id="s11"><span class="tag">topic 11</span><h2>11 · The LL(1) parser: the idea</h2>
+<div class="flow"><span>L</span><i>= Left-to-right scanning of input</i></div>
+<div class="flow"><span>L</span><i>= Leftmost derivation (top-down)</i></div>
+<div class="flow"><span>(1)</span><i>= 1 look-ahead token to decide</i></div>
+<div class="exact">First L: Left to Right Scanning. Second L: Leftmost derivation. 1: one input symbol of look-ahead at each step to make parsing action decisions.</div>
+<p>From your notes, LL(1) works only on a grammar that is:</p>
+<div class="key">1. <b>Unambiguous</b> (lesson 6) · 2. <b>No left recursion</b> (lesson 7) · 3. <b>Deterministic</b>, left-factored (lesson 8)</div>
+<svg class="dia" viewBox="0 0 400 170" role="img" aria-label="LL(1) parser model">
+  <rect x="80" y="6" width="240" height="26" rx="3" class="bx"/><text x="200" y="19" class="tx">input buffer:  ( id + id ) * id $</text>
+  <rect x="150" y="62" width="100" height="40" rx="3" class="bx bx-a"/><text x="200" y="76" class="tx">LL(1)</text><text x="200" y="90" class="tx">parser</text>
+  <rect x="10" y="56" width="80" height="80" rx="3" class="bx bx-c"/><text x="50" y="72" class="tx">stack</text><text x="50" y="92" class="tx-s">E</text><text x="50" y="106" class="tx-s">$</text>
+  <rect x="290" y="62" width="100" height="40" rx="3" class="bx bx-b"/><text x="340" y="76" class="tx">parsing</text><text x="340" y="90" class="tx">table M</text>
+  <rect x="150" y="132" width="100" height="26" rx="3" class="bx"/><text x="200" y="145" class="tx">output (rules)</text>
+  <path class="ln" d="M200 32v30M90 82h60M250 82h40M200 102v30"/>
+</svg>
+<p>The full method has 4 parts. Do them in this order in the exam:</p>
+<div class="flow"><span>1 FIRST</span><i>→</i><span>2 FOLLOW</span><i>→</i><span>3 table</span><i>→</i><span>4 parse the string</span><i>→</i><span>tree + conclusion</span></div>
+<div class="warnbox">If the grammar in the question is left recursive (for example <code>E → E + T</code>), remove left recursion first (lesson 7), then do LL(1). The class grammar <code>E → TE'</code> … is exactly the slides grammar after this step, with F renamed to M.</div>
+</section>
+
+<!-- 12 -->
+<section class="card" id="s12"><span class="tag">topic 12</span><h2>12 · FIRST and FOLLOW sets</h2>
+<h3>FIRST</h3>
+<div class="exact">The FIRST set of a grammar symbol X, written as FIRST(X), contains the terminals that can appear at the beginning of strings derived from X.<br>1. If X is a terminal, then FIRST(X) = {X}. 2. If X → ε, include ε in FIRST(X). 3. If X → Y1Y2…Yn, add FIRST(Y1) excluding ε. If Y1 can derive ε, continue to Y2 and so on. 4. If every symbol on the right-hand side can derive ε, include ε.</div>
+<div class="key"><b>Baby version (your notes):</b> look at the <b>first</b> symbol of each alternative.<br>• terminal → put it in FIRST. Done.<br>• ε → put ε in FIRST.<br>• non-terminal → find <b>its</b> FIRST and copy it (without ε). If it had ε, also look at the next symbol.</div>
+<div class="stepper-host" data-ll1="first" data-g="notes" data-title="FIRST for the class grammar E → TE' …"></div>
+<h3>FOLLOW</h3>
+<div class="exact">The FOLLOW set of a non-terminal A, written as FOLLOW(A), contains the terminals that can appear immediately after A in a sentential form.<br>1. Put the end marker $ in FOLLOW(S), where S is the start symbol. 2. If A → αBβ, add FIRST(β) excluding ε to FOLLOW(B). 3. If A → αB or A → αBβ where β ⇒* ε, add FOLLOW(A) to FOLLOW(B).</div>
+<div class="key"><b>Baby version (your notes):</b> start symbol gets <b>$</b>. Then find B on every <b>right side</b> and look at what is just after it.<br>• terminal → add it.<br>• non-terminal → add its FIRST without ε. If it has ε, keep looking right.<br>• nothing → add FOLLOW of the <b>parent</b> (the left side).</div>
+<div class="stepper-host" data-ll1="follow" data-g="notes" data-title="FOLLOW for the class grammar"></div>
+<div class="warnbox">FOLLOW <b>never</b> has ε. FIRST never has $. FOLLOW is only for non-terminals. Most lost marks: forgetting $ in the start symbol, and forgetting "nothing after → add FOLLOW(parent)".</div>
+</section>
+
+<!-- 13 -->
+<section class="card" id="s13"><span class="tag">topic 13</span><h2>13 · Building the LL(1) parsing table</h2>
+<div class="key"><b>Rule for each production A → α:</b><br>1. For every terminal <code>a</code> in FIRST(α), put <code>A → α</code> in M[A, a].<br>2. If ε is in FIRST(α), put <code>A → α</code> in M[A, b] for every <code>b</code> in FOLLOW(A) (this includes $).<br>3. Empty cells = error.</div>
+<div class="memo">Your notes: <b>"Find out from FIRST: which rule gives which terminal. If ε is in FIRST, go to FOLLOW."</b></div>
+<div class="stepper-host" data-ll1="table" data-g="notes" data-title="Table for the class grammar (one cell per step)"></div>
+</section>
+
+<!-- 14 -->
+<section class="card" id="s14"><span class="tag">topic 13 · mid Q2 (8 marks)</span><h2>14 · Parsing a string with the stack</h2>
+<div class="key"><b>The loop (repeat until $ meets $):</b><br>• Start: stack = <code>$ S</code>, buffer = <code>input $</code>, LA at the first token.<br>• Top is a <b>non-terminal</b> A: look at M[A, LA]. Pop A. Push the right side <b>reversed</b>. (ε: push nothing.)<br>• Top is a <b>terminal</b>: it must equal LA. Pop it and move LA right (match).<br>• Top = $ and LA = $: <b>accept</b>. Empty cell or mismatch: <b>error</b>.</div>
+<div class="stepper-host" data-ll1="parse" data-g="notes" data-input="( id + id ) * id" data-title="Notes: parse (id+id)*id"></div>
+<p>Quiz 02 (practice LL(1)), the full exam answer, every phase:</p>
+<div class="stepper-host" data-ll1="full" data-g="quiz2" data-input="int id , id ;" data-title="Quiz 02: D → TL; … parse int id,id;"></div>
+<details class="ex"><summary>Exam-format answer for Quiz 02 (what to write on paper)</summary><div data-answer data-g="quiz2" data-input="int id , id ;"></div></details>
+<h3>When parsing fails</h3>
+<p>The question says "If parsing is not possible, point out the reasons." Practice problem 02, grammar <code>S → aAb</code>, <code>A → cB</code>, <code>B → d | ε</code>:</p>
+<div class="stepper-host" data-ll1="parse" data-g="pp1" data-input="a a a b b c" data-title="Practice 02: parse aaabbc (fails)"></div>
+<div class="stepper-host" data-ll1="parse" data-g="pp2" data-input="a c d b" data-title="Practice 02 Q2: S → AB … parse acdb (fails)"></div>
+<div class="warnbox">Write the reason clearly: "Top = A, LA = a, and M[A, a] is empty ∴ error, parsing is not possible." Do not just write "error".</div>
+</section>
+
+<!-- 15 -->
+<section class="card" id="s15"><span class="tag">topic 14</span><h2>15 · FIRST–FOLLOW conflicts (when a grammar is NOT LL(1))</h2>
+<div class="exact">A FIRST/FIRST conflict occurs when two or more alternative productions of the same non-terminal have overlapping FIRST sets.</div>
+<div class="exact">A FIRST/FOLLOW conflict occurs when a production can derive the empty string ε and a terminal that can begin another alternative also belongs to the FOLLOW set of the non-terminal.</div>
+<div class="tscroll"><table class="cmp"><thead><tr><th></th><th>FIRST/FIRST</th><th>FIRST/FOLLOW</th></tr></thead><tbody>
+<tr><td>Sign</td><td>Two alternatives begin with the same terminal</td><td>An alternative can be ε, and FOLLOW overlaps another alternative's FIRST</td></tr>
+<tr><td>Compare</td><td>FIRST of the alternatives</td><td>FIRST of the non-empty alternative vs FOLLOW of the left side</td></tr>
+<tr><td>In the table</td><td colspan="2">Two rules in the same cell</td></tr>
+<tr><td>Fix</td><td>Left factoring / redesign</td><td>Restructure, remove ε rules</td></tr>
+</tbody></table></div>
+<div class="stepper-host" data-ll1="table" data-g="ffConf" data-title="Slides + notes: S → aS | B, B → abB | ε (FIRST/FIRST)"></div>
+<div class="stepper-host" data-ll1="table" data-g="foConf" data-title="Slides: S → Aa, A → a | ε (FIRST/FOLLOW)"></div>
+<div class="stepper-host" data-ll1="table" data-g="notesConf" data-title="Notes page 1: S → a | B, B → aB | a"></div>
+</section>
+
+<!-- 16 -->
+<section class="card" id="s16"><span class="tag">worked past papers</span><h2>16 · Past papers, fully solved</h2>
+<h3>Mid Autumn-23 Q2 [8]</h3>
+<p>Write the First() and Follow() of the following Grammar. Draw LL(1) Parsing Table and Parse the string <code>( ) g c c d c e</code> showing all steps. If parsing is not possible, point out the reasons. V = {E, U, V, W, X, Y}, T = {c, d, e, (, ), g, ε}, S = {E}</p>
+<div class="formula">E → cUVW | XYE
+U → c | ε
+V → dU | ε
+W → e | ε
+X → e | (Y)
+Y → g | ε</div>
+<div class="stepper-host" data-ll1="full" data-g="mid23" data-input="( ) g c c d c e" data-title="Mid Aut-23 Q2: every step"></div>
+<details class="ex"><summary>Exam-format answer (write this)</summary><div data-answer data-g="mid23" data-input="( ) g c c d c e"></div></details>
+<h3>Mid Autumn-23 Q3 [5]: True / False</h3>
+<div class="cls" data-a="F" data-why="Left recursion makes a top-down parser loop forever (A ⇒ Aα ⇒ Aαα …)."><div class="q">(a) All TDP can use Left Recursive Grammar (LRG).</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="F" data-why="Predictive parsers (LL(1)) need a deterministic grammar. With a common prefix they cannot choose. Only backtracking parsers can cope, so not ALL TDP."><div class="q">(b) All TDP can use Non-deterministic Grammar (NDG).</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="F" data-why="Textbook answer: FIRST can still be found. For A → Aα | β, FIRST(A) = FIRST(β) (plus FIRST(α) if β can be ε). Only the naive recursive method loops. If your teacher said otherwise in class, follow the class."><div class="q">(c) From LRG grammar complete First set can't be found.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="F" data-why="FOLLOW sets are computed from where a symbol appears on right sides. Left recursion does not stop this. (Same note as (c).)"><div class="q">(d) From LRG grammar complete Follow set can't be found.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="F" data-why="Brute force = top-down parsing with backtracking."><div class="q">(e) Brute Force Parser is a BUP.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<p class="muted">(c) and (d) are not settled by the slides. The answers above are the textbook view, which the computer check agrees with. Always write a one-line reason, so you earn marks either way.</p>
+<h3>Mid Autumn-23 quiz Q1 and Q2</h3><p>Solved step by step in lessons 7 and 8.</p>
+<h3>Extra LL(1) drill (from Assignment 01's grammar)</h3>
+<p>Assignment Q1 grammar <code>S → (L) | a</code>, <code>L → L, S | S</code> is left recursive. Remove it first: <code>L → S L'</code>, <code>L' → , S L' | ε</code>. Then:</p>
+<div class="stepper-host" data-ll1="full" data-g="drill" data-input="( a , ( a , a ) )" data-title="Drill: parse (a,(a,a))"></div>
+</section>
+
+<!-- 17 -->
+<section class="card" id="s17"><span class="tag">practice paper · 30 marks · 90 min</span><h2>17 · Practice paper (same shape as the real one)</h2>
+<p>New questions of the same type and difficulty. Write on paper first. Then open the model answer, tick each step you got right, and read your score.</p>
+<div class="timer"><span id="pp-time">90:00</span><button id="pp-start" class="primary">Start</button><button id="pp-reset">Reset</button><span class="muted">Suggested: Q1 20 min · Q2 30 min · Q3 7 min · quiz 15 + 15 min</span></div>
+<div class="paper">
+<div class="phead">Independent University, Bangladesh<br>CSE-313 Mid + Quiz (Practice), Time: 1h30m<br>Mid Question (Total marks: 20)</div>
+
+<div class="pq"><span class="marks">[7]</span><p><b>1.</b> Prove whether the following Grammar is Ambiguous or NOT. If the grammar is ambiguous, convert it to unambiguous form:</p><div class="formula">S → S # S | S & S | ( S ) | a</div>
+<details class="ex"><summary>Show model answer</summary>
+<div class="stepper-host" data-deriv="ppA" data-title="LMD 1 of a # a & a"></div><div class="stepper-host" data-deriv="ppB" data-title="LMD 2 of a # a & a"></div>
+<div class="stepper-host" data-notes="ppq1" data-title="Write-up"></div></details>
+<div class="scheme"><label><input type="checkbox" data-m="1"> States "ambiguous" [1]</label><label><input type="checkbox" data-m="1"> A correct string with two operators [1]</label><label><input type="checkbox" data-m="1.5"> First LMD / parse tree correct [1.5]</label><label><input type="checkbox" data-m="1.5"> Second, different LMD / parse tree correct [1.5]</label><label><input type="checkbox" data-m="0.5"> Precedence + associativity assumption written [0.5]</label><label><input type="checkbox" data-m="1.5"> Correct layered unambiguous grammar (keeps ( S ) and a at the bottom) [1.5]</label><span class="pq-score"></span></div>
+<p class="muted">Ways to lose marks: two trees that are really the same tree; forgetting <code>( S )</code> in the new grammar; no assumption written.</p></div>
+
+<div class="pq"><span class="marks">[8]</span><p><b>2.</b> Write the First() and Follow() of the following Grammar. Draw LL(1) Parsing Table and parse the string <code>acbbgh</code> showing all steps. If parsing is not possible, point out the reasons. Non-terminals = {S, B, C, D, E, F}, Terminals = {a, b, c, f, g, h, ε}, Start symbol = {S}.</p><div class="formula">S → aBDh
+B → cC
+C → bC | ε
+D → EF
+E → g | ε
+F → f | ε</div>
+<details class="ex"><summary>Show model answer</summary><div class="stepper-host" data-ll1="full" data-g="paperQ2" data-input="a c b b g h" data-title="Practice Q2: every step"></div><div data-answer data-g="paperQ2" data-input="a c b b g h"></div></details>
+<div class="scheme"><label><input type="checkbox" data-m="2"> All six FIRST sets correct [2]</label><label><input type="checkbox" data-m="2"> All six FOLLOW sets correct [2]</label><label><input type="checkbox" data-m="2"> Table correct (ε rules placed by FOLLOW) [2]</label><label><input type="checkbox" data-m="0.5"> "No cell has more than one rule ∴ LL(1)" [0.5]</label><label><input type="checkbox" data-m="1"> Stack steps correct with pop order [1]</label><label><input type="checkbox" data-m="0.5"> Parse tree + conclusion [0.5]</label><span class="pq-score"></span></div>
+<p class="muted">Ways to lose marks: FOLLOW(B) misses f or h (D and E, F can all be empty, so look past them to h); putting ε as a table column.</p></div>
+
+<div class="pq"><span class="marks">[5]</span><p><b>3.</b> Find True/False of the following statements:</p>
+<details class="ex"><summary>Show model answer</summary><p>(a) LL(1) parser uses the rightmost derivation. <b>False</b>: the second L means leftmost.<br>(b) A bottom-up parser builds the parse tree from the leaves to the root. <b>True</b>.<br>(c) The FOLLOW set of a non-terminal can contain ε. <b>False</b>: FOLLOW holds terminals and $ only.<br>(d) An ambiguous grammar can be LL(1). <b>False</b>: an ambiguous grammar always gives a cell with two rules.<br>(e) Recursive descent parser with backtracking is a top-down parser. <b>True</b>.</p></details>
+<p>(a) LL(1) parser uses the rightmost derivation.<br>(b) A bottom-up parser builds the parse tree from the leaves to the root.<br>(c) The FOLLOW set of a non-terminal can contain ε.<br>(d) An ambiguous grammar can be LL(1).<br>(e) Recursive descent parser with backtracking is a top-down parser.</p>
+<div class="scheme"><label><input type="checkbox" data-m="1"> (a) [1]</label><label><input type="checkbox" data-m="1"> (b) [1]</label><label><input type="checkbox" data-m="1"> (c) [1]</label><label><input type="checkbox" data-m="1"> (d) [1]</label><label><input type="checkbox" data-m="1"> (e) [1]</label><span class="pq-score"></span></div></div>
+
+<div class="phead" style="margin-top:14px">Quiz Question (Total marks: 10)</div>
+<div class="pq"><span class="marks">[5]</span><p><b>1.</b> Convert the following Non Deterministic Grammar (NDG) to Deterministic Grammar (DG):</p><div class="formula">S → aabS | aaC | aab | b
+C → cC | c</div>
+<details class="ex"><summary>Show model answer</summary><div class="stepper-host" data-conv="lf" data-g="ppqlf" data-title="Practice quiz Q1"></div></details>
+<div class="scheme"><label><input type="checkbox" data-m="1.5"> S → aaS' | b [1.5]</label><label><input type="checkbox" data-m="2"> S' → bS'' | C and S'' → S | ε [2]</label><label><input type="checkbox" data-m="1.5"> C → cC', C' → C | ε [1.5]</label><span class="pq-score"></span></div>
+<p class="muted">Ways to lose marks: stopping at S' → bS | C | b (still non-deterministic); forgetting C.</p></div>
+
+<div class="pq"><span class="marks">[5]</span><p><b>2.</b> Convert the following Left Recursive Grammar (LRG) to Right Recursive Grammar (RRG):</p><div class="formula">P → P ! Q | Q
+Q → Q ? r | s t</div>
+<details class="ex"><summary>Show model answer</summary><div class="stepper-host" data-conv="lr" data-g="ppqlr" data-title="Practice quiz Q2"></div></details>
+<div class="scheme"><label><input type="checkbox" data-m="2.5"> P → QP', P' → !QP' | ε [2.5]</label><label><input type="checkbox" data-m="2.5"> Q → stQ', Q' → ?rQ' | ε [2.5]</label><span class="pq-score"></span></div>
+<p class="muted">Ways to lose marks: missing ε; writing P' → !Q (no P' at the end).</p></div>
+
+<p class="total">Total: <span id="pp-total">0 / 30</span></p><p id="pp-msg"></p>
+</div>
+</section>
+
+<!-- 18 -->
+<section class="card" id="s18"><span class="tag">quick recall</span><h2>18 · True / False drill (with reasons)</h2>
+<p>The real paper has 5 marks of True/False. Tap an answer. Read the reason even when you are right.</p>
+<div class="cls" data-a="F" data-why="Left factoring removes common prefixes (non-determinism). Left recursion is removed by the A → βA' formula."><div class="q">Left factoring removes left recursion.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="T" data-why="Rule 1 of FOLLOW."><div class="q">$ is always in FOLLOW of the start symbol.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="T" data-why="If a grammar is LL(1), every cell has at most one rule, so each string has one derivation."><div class="q">Every LL(1) grammar is unambiguous.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="T" data-why="Slides: bottom-up uses the reverse of rightmost derivation."><div class="q">Bottom-up parsing uses the reverse of the rightmost derivation.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="F" data-why="The lexical analyzer makes tokens. The syntax analyzer (parser) builds the parse tree."><div class="q">The lexical analyzer builds the parse tree.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="F" data-why="Columns are terminals and $. ε rules are placed using FOLLOW."><div class="q">ε can be a column in the LL(1) parsing table.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="T" data-why="FIRST rule 1."><div class="q">FIRST of a terminal is the terminal itself.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="F" data-why="The new grammar makes exactly the same strings. Only the shape of the trees changes."><div class="q">Removing left recursion changes the language of the grammar.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="F" data-why="Finite automata cannot remember nesting depth. A CFG is needed."><div class="q">Regular expressions can check balanced parentheses.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="T" data-why="Two rules in one cell = the parser cannot choose = not LL(1)."><div class="q">If two rules fall in one cell of the table, the grammar is not LL(1).</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="F" data-why="A predictive parser never backtracks. It uses the look-ahead and the table."><div class="q">A predictive parser needs backtracking.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="T" data-why="Lower precedence = upper level of the grammar (closer to the start symbol)."><div class="q">In an unambiguous expression grammar, + is defined at a higher level (closer to the start symbol) than *.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="F" data-why="^ is right associative, so its rule is right recursive: F → G ^ F."><div class="q">The rule for ^ (power) should be left recursive.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="T" data-why="Phases 1–3 (lexical, syntax, semantic) form the analysis part."><div class="q">Semantic analysis belongs to the analysis (front end) part of the compiler.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+<div class="cls" data-a="F" data-why="An interpreter does not produce a target program; it executes directly."><div class="q">An interpreter produces a target program in machine code.</div><button data-v="T">True</button><button data-v="F">False</button><div class="fb"></div></div>
+</section>
+
+<!-- 19 -->
+<section class="card" id="s19"><span class="tag">tool</span><h2>19 · Solver: type any grammar, get every step</h2>
+<p>Use it to check your paper answers. One rule per line. Separate symbols with <b>spaces</b>. Use <code>-&gt;</code> and <code>|</code>. Write ε as <code>ε</code> or <code>eps</code>. The first left side is the start symbol.</p>
+<div class="loadrow"><span class="muted">load:</span>
+<button data-load="notes::( id + id ) * id">class E→TE'</button><button data-load="mid23::( ) g c c d c e">mid Aut-23 Q2</button><button data-load="quiz2::int id , id ;">quiz 02</button><button data-load="paperQ2::a c f h">practice Q2</button><button data-load="pp1::a c d b">practice 02 Q1</button><button data-load="slideslr::::lr">left recursion</button><button data-load="midlf::::lf">left factoring</button></div>
+<textarea id="pg-g" aria-label="grammar">E -> T E'
+E' -> + T E' | ε
+T -> M T'
+T' -> * M T' | ε
+M -> id | ( E )</textarea>
+<div class="row"><input type="text" id="pg-s" value="id + id * id" aria-label="string to parse"><select id="pg-mode" aria-label="what to do"><option value="ll1">LL(1): FIRST, FOLLOW, table, parse</option><option value="lr">Remove left recursion (LRG → RRG)</option><option value="lf">Left factoring (NDG → DG)</option></select><button id="pg-run" class="primary">Solve step by step</button></div>
+<div id="pg-out"></div>
+</section>
+
+<!-- 20 -->
+<section class="card" id="s20"><span class="tag">morning review</span><h2>20 · Cheat sheet and exam checklist</h2>
+<div class="formula">LEFT RECURSION   A → Aα | β        ⇒  A → βA'      A' → αA' | ε
+LEFT FACTORING   A → αβ1 | αβ2     ⇒  A → αA'      A' → β1 | β2
+AMBIGUITY FIX    low precedence on top; left assoc → E → E op T
+                 right assoc (^) → F → G ^ F; operands at the bottom
+FIRST            first symbol: terminal → add; ε → add ε; NT → copy (no ε), if ε go on
+FOLLOW           start gets $; after B: terminal → add; NT → FIRST (no ε);
+                 nothing / all-ε → add FOLLOW(parent)
+TABLE            A → α into M[A,a] for a ∈ FIRST(α); if ε ∈ FIRST(α): a ∈ FOLLOW(A)
+PARSE            stack $S; NT: pop, push RHS reversed; T: match, move LA; $=$ accept</div>
+<h3>Checklist: tick when you can do it without looking</h3>
+<ul class="check">
+<li><label><input type="checkbox"> Name the 6 phases in order and say what each does</label></li>
+<li><label><input type="checkbox"> Define token, lexeme, pattern; compiler vs interpreter</label></li>
+<li><label><input type="checkbox"> Read an RE like (a|b)*ab and list 4 strings</label></li>
+<li><label><input type="checkbox"> Write an LMD and an RMD and draw the parse tree</label></li>
+<li><label><input type="checkbox"> Show ambiguity: string + two LMD trees + one-sentence reason</label></li>
+<li><label><input type="checkbox"> Convert to unambiguous with a written assumption</label></li>
+<li><label><input type="checkbox"> Remove direct left recursion; do one indirect example</label></li>
+<li><label><input type="checkbox"> Left factor, including the second round (S'')</label></li>
+<li><label><input type="checkbox"> Draw the parser classification tree; TDP vs BUP table</label></li>
+<li><label><input type="checkbox"> FIRST and FOLLOW for a 6-rule grammar with ε</label></li>
+<li><label><input type="checkbox"> Fill the LL(1) table and say "∴ LL(1)" or name the conflict</label></li>
+<li><label><input type="checkbox"> Parse a string with the horizontal stack and pop numbers</label></li>
+<li><label><input type="checkbox"> Write the reason when parsing fails</label></li>
+</ul>
+</section>
+<footer>Sources: CSE 313 lecture slides by Nazma Sarker (Introduction, Lecture 1, Lexical Analysis 1–2, Parsing I–III, FIRST-FOLLOW Conflicts), Quiz 01 solution, Quiz 02 LL(1) solution, Assignment 01, Practice Problem 02, Mid Autumn-23 SET-A, student class notes. Textbook: Aho, Lam, Sethi, Ullman, <i>Compilers: Principles, Techniques, and Tools</i>, ch. 4. All grammar answers checked by computer.</footer>
+</div>
+<button id="theme" aria-label="Switch light or dark theme">◐ theme</button>
