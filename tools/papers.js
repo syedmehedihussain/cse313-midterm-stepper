@@ -58,6 +58,8 @@ svg.tree .e{fill:var(--muted)}
 .trees{display:flex;flex-wrap:wrap;gap:16px}
 .trees figure{margin:4px 0;border:1px solid var(--line);border-radius:4px;padding:6px 10px;max-width:100%;overflow-x:auto}
 .trees figcaption{font-size:.8rem;color:var(--muted)}
+ol.tfq{margin:6px 0 0;padding-left:28px}ol.tfq li{margin:5px 0}.tfb{font:700 12px var(--mono);color:var(--muted);white-space:nowrap;margin-left:6px}
+.tftab table.t td{text-align:left;font-family:var(--sans);font-size:.85rem}.tftab table.t td:nth-child(1),.tftab table.t td:nth-child(3){text-align:center}
 details.rough{margin:10px 0 0;font-size:.85rem}
 details.rough summary{cursor:pointer;color:var(--muted)}
 details.rough ul{margin:6px 0;padding-left:18px}
@@ -93,7 +95,7 @@ function questionHTML(p) {
     `<div class="qb" id="${p.id}-q${b.sec}${b.n}"><div class="qh"><span><b>${b.n}.</b> ${b.q}</span><span class="mk">${b.marks !== '' ? `[${b.marks}]` : ''}</span></div>${b.g ? require('./sheet.js').gbox(b.g) : ''}</div>`).join('\n');
 }
 function answerHTML(p, b) {
-  const lbl = (b.secName === 'Quiz' ? 'Quiz Answer ' : 'Answer ') + b.n + (b.marks !== '' ? ` [${b.marks}]` : '');
+  const lbl = b.label || (b.secName === 'Quiz' ? 'Quiz Answer ' : 'Answer ') + b.n + (b.marks !== '' ? ` [${b.marks}]` : '');
   return `<div class="ans"><div class="ah">${lbl}</div><span class="wt">WRITE THIS</span>${b.html}${b.lose ? `<p class="lose"><b>Lose marks by:</b> ${b.lose}</p>` : ''}</div>`;
 }
 function prepare(p) {
@@ -130,7 +132,7 @@ if (!process.argv.includes('--no-pdf')) {
 }
 
 /* ---------- papers.html ---------- */
-const cards = PAPERS.map(p => `<div class="pc"><div class="k">${p.kind}</div><div class="nm">${p.short}</div><div class="meta">${(n => n + (n === 1 ? ' question' : ' questions'))(p.blocks.filter(b => !b.h).length)}${p.total !== '-' ? ` · total ${p.total} · ${p.time}` : ' · practice sheet'}</div><div class="row"><a class="btn pri" href="#p-${p.id}">open</a><a class="btn" href="pdf/${p.id}-questions.pdf" target="_blank">question pdf</a><a class="btn" href="pdf/${p.id}-solved.pdf" target="_blank">solved pdf</a></div></div>`).join('');
+const cards = PAPERS.map(p => `<div class="pc"><div class="k">${p.kind}</div><div class="nm">${p.short}</div><div class="meta">${p.id === 'truefalse' ? (p.blocks.map(b => b.q).join('').match(/<li>/g) || []).length + ' statements · 4 tiers, most important first' : (n => n + (n === 1 ? ' question' : ' questions'))(p.blocks.filter(b => !b.h).length)}${p.total !== '-' ? ` · total ${p.total} · ${p.time}` : (p.id === 'truefalse' ? '' : ' · practice sheet')}</div><div class="row"><a class="btn pri" href="#p-${p.id}">open</a><a class="btn" href="pdf/${p.id}-questions.pdf" target="_blank">question pdf</a><a class="btn" href="pdf/${p.id}-solved.pdf" target="_blank">solved pdf</a></div></div>`).join('');
 const sections = PAPERS.map(p => `<section class="paper" id="p-${p.id}">${headHTML(p)}
 <div class="tools"><a class="btn" href="pdf/${p.id}-questions.pdf" target="_blank">question pdf</a><a class="btn" href="pdf/${p.id}-solved.pdf" target="_blank">solved pdf (with comments)</a><button class="btn" data-open="${p.id}">show all answers</button><a class="btn" href="#top">back to list</a></div>
 ${p.blocks.map(b => b.h ? `<h3 class="part">${b.h}</h3>` : `<div class="qb"><div class="qh"><span><b>${b.n}.</b> ${b.q}</span><span class="mk">${b.marks !== '' ? `[${b.marks}]` : ''}</span></div>${b.g ? require('./sheet.js').gbox(b.g) : ''}</div><details class="ansd" data-p="${p.id}"><summary>Show model answer ${b.n}</summary>${answerHTML(p, b)}</details>`).join('\n')}
